@@ -1,0 +1,10 @@
+{
+  "name": "ラジオ採用メール管理",
+  "short_name": "採用メール",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "lang": "ja",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
