@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver3">
+  <link rel="stylesheet" href="styles.css?v=ver4">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.3</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.4</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -20,6 +20,7 @@
     <button id="backupBtn">バックアップ</button>
     <button id="restoreBtn">復元</button>
     <button id="csvBtn">CSV書出</button>
+    <button id="themeBtn">テーマカラー</button>
     <input id="restoreInput" type="file" accept=".json,application/json" hidden>
   </div>
 </header>
@@ -56,6 +57,18 @@
       <tbody id="mailTable"></tbody>
     </table>
   </section>
+
+<section id="memoView" class="memo-view" hidden>
+  <div class="memo-compose">
+    <textarea id="memoInput" rows="3" maxlength="500" placeholder="メールのアイデアをメモ"></textarea>
+    <div class="memo-compose-footer">
+      <span id="memoCharCount">0 / 500</span>
+      <button id="memoPostBtn" class="primary">追加</button>
+    </div>
+  </div>
+  <div id="memoTimeline" class="memo-timeline"></div>
+</section>
+
 </main>
 
 <dialog id="editDialog">
@@ -96,6 +109,21 @@
   </div>
 </dialog>
 
+
+<dialog id="themeDialog" class="compact-dialog">
+  <div class="dialog-head">
+    <h2>テーマカラー</h2>
+    <button type="button" id="closeThemeDialog" class="close">×</button>
+  </div>
+  <div class="theme-grid">
+    <button class="theme-choice" data-theme="green">グリーン</button>
+    <button class="theme-choice" data-theme="blue">ブルー</button>
+    <button class="theme-choice" data-theme="purple">パープル</button>
+    <button class="theme-choice" data-theme="orange">オレンジ</button>
+    <button class="theme-choice" data-theme="gray">グレー</button>
+  </div>
+</dialog>
+
 <dialog id="periodDialog" class="compact-dialog">
   <div class="dialog-head">
     <h2>期間指定</h2>
@@ -111,7 +139,8 @@
   </div>
 </dialog>
 
+<button id="fabAddBtn" class="fab-add" aria-label="メールを追加">＋</button>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver3"></script>
+<script src="app.js?v=ver4"></script>
 </body>
 </html>

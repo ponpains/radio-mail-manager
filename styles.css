@@ -359,3 +359,175 @@ main{
   outline:2px solid #9ccca5;
   background:#fff;
 }
+
+
+/* ===== ver.4 / standalone-ready ===== */
+:root{
+  --accent:#4b9f5b;
+  --accent-soft:#eef8ee;
+}
+.primary,.program-tab.active,.adopted-tab.active{
+  background:var(--accent)!important;
+  border-color:var(--accent)!important;
+}
+.icon-btn,.podcast{color:var(--accent)!important}
+.table-wrap tbody tr:active,.adopted-row{background:var(--accent-soft)!important}
+.favorite-filter.active,.period-filter-btn.active{
+  border-color:var(--accent)!important;
+}
+
+/* Let the app fill any phone height cleanly. */
+html,body{height:100%;min-height:100dvh}
+body{overflow:hidden}
+main{
+  height:calc(100dvh - 64px);
+  min-height:0!important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.program-tabs{flex:0 0 auto}
+.summary{flex:0 0 auto}
+.filters{flex:0 0 auto}
+.table-wrap{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+.table-wrap table{min-height:0!important}
+
+/* Only filters hide while rows move; they always come back after scroll idle. */
+.filters{
+  transition:max-height .16s ease,opacity .16s ease,padding .16s ease;
+  max-height:120px;
+}
+.filters.filters-hidden{
+  opacity:0!important;
+  max-height:0!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  border-bottom:0!important;
+  overflow:hidden!important;
+}
+
+/* Floating add button, X-like */
+.fab-add{
+  position:fixed;
+  left:18px;
+  bottom:18px;
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  border:0;
+  background:var(--accent);
+  color:#fff;
+  font-size:30px;
+  line-height:1;
+  box-shadow:0 6px 18px #0003;
+  z-index:40;
+}
+.fab-add:active{transform:scale(.97)}
+
+/* Memo timeline */
+.memo-view{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  background:#fff;
+}
+.memo-compose{
+  padding:12px;
+  border-bottom:1px solid #ddd;
+  background:#fff;
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+.memo-compose textarea{
+  width:100%;
+  border:0;
+  resize:none;
+  font:inherit;
+  font-size:15px;
+  min-height:76px;
+  outline:none;
+}
+.memo-compose-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:#777;
+  font-size:12px;
+}
+.memo-timeline{padding-bottom:30px}
+.memo-card{
+  padding:14px 16px;
+  border-bottom:1px solid #e5e5e5;
+}
+.memo-text{
+  white-space:pre-wrap;
+  line-height:1.55;
+  font-size:15px;
+}
+.memo-date{
+  margin-top:8px;
+  color:#888;
+  font-size:11px;
+}
+
+/* ver.1-sized detail dialog, with gray areas directly editable */
+#detailDialog{
+  width:min(90vw,500px)!important;
+  max-height:82vh!important;
+}
+#detailDialog .dialog-head{padding:9px 12px!important}
+#detailDialog .dialog-head h2{font-size:16px!important}
+#detailDialog .detail-grid{
+  grid-template-columns:68px 1fr!important;
+  gap:5px 8px!important;
+  padding:10px 12px!important;
+  font-size:12px!important;
+}
+#detailDialog .detail-body{
+  margin:0 12px 8px!important;
+  padding:8px 9px!important;
+  line-height:1.55!important;
+  font-size:12px!important;
+}
+.detail-gray{
+  background:#f3f3f3;
+  border:1px solid #e1e1e1;
+  border-radius:6px;
+  padding:4px 6px;
+  min-height:28px;
+}
+.editable-inline:focus,.editable-block-v1:focus,.detail-date-edit:focus,.detail-url-v1:focus{
+  outline:2px solid var(--accent);
+  background:#fff;
+}
+.detail-date-edit,.detail-url-v1{
+  width:100%;
+  border:1px solid #ddd;
+  border-radius:6px;
+  padding:5px 6px;
+  font:inherit;
+}
+.editable-block-v1{white-space:pre-wrap}
+
+/* Theme picker */
+.theme-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:14px;
+}
+.theme-choice{
+  border:1px solid #ddd;
+  border-radius:9px;
+  padding:12px 10px;
+  background:#fff;
+  font-size:13px;
+}

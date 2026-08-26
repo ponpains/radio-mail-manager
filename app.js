@@ -1,4 +1,8 @@
+// standalone-ready: UI/state are kept local and modular for later Android packaging.
+const APP_VERSION="ver.4";
 const KEY="radioMailManager.v3";
+const MEMO_KEY="radioMailManager.memos.v1";
+const THEME_KEY="radioMailManager.theme";
 const OLD_KEYS=["radioMailManager.v2","radioMailManager.v1"];
 let raw=localStorage.getItem(KEY);
 if(!raw){for(const k of OLD_KEYS){if(localStorage.getItem(k)){raw=localStorage.getItem(k);break}}}
@@ -6,6 +10,7 @@ let mails=raw?JSON.parse(raw):[];
 let selectedView=localStorage.getItem("radioMailManager.selectedView")||"けれけれ";
 let editingId=null,currentDetailId=null,deferredPrompt=null;
 let favoriteOnly=false;
+let memoItems=JSON.parse(localStorage.getItem(MEMO_KEY)||"[]");
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -30,10 +35,10 @@ if(!mails.length){
 mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:(x.name==="ガンバレななお"||x.name==="ガンバレな")?"ガンバレないわ":x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",favorite:!!x.favorite,status:x.status||"adopted"}));
 localStorage.setItem(KEY,JSON.stringify(mails));
 function adoptedPrograms(){return [...new Set(mails.filter(x=>x.status==="adopted").map(x=>x.program).filter(Boolean))]}
-function viewOrder(){return ["__sent__","__adopted__",...adoptedPrograms()]}
+function viewOrder(){return ["__memo__","__sent__","__adopted__",...adoptedPrograms()]}
 function renderProgramTabs(){
   const ps=adoptedPrograms();
-  $("programTabs").innerHTML=
+  $("programTabs").innerHTML=`<button class="program-tab memo-tab ${selectedView==="__memo__"?"active":""}" data-view="__memo__">メモ</button>`+
     `<button class="program-tab sent-tab ${selectedView==="__sent__"?"active":""}" data-view="__sent__">全件</button>`+
     `<button class="program-tab adopted-tab ${selectedView==="__adopted__"?"active":""}" data-view="__adopted__">採用</button>`+
     ps.map(p=>`<button class="program-tab ${p===selectedView?"active":""}" data-view="${esc(p)}">${esc(p)}</button>`).join("");
@@ -51,7 +56,7 @@ let programMenuTarget=null;
 function bindTabLongPress(){
   document.querySelectorAll('.program-tab[data-view]').forEach(btn=>{
     const view=btn.dataset.view;
-    if(view==="__sent__"||view==="__adopted__")return;
+    if(view==="__memo__"||view==="__sent__"||view==="__adopted__")return;
 
     const start=(ev)=>{
       clearTimeout(longPressTimer);
@@ -108,6 +113,7 @@ document.addEventListener("click",e=>{
 
 
 function currentRows(){
+  if(selectedView==="__memo__")return [];
   if(selectedView==="__sent__")return mails.filter(x=>x.status==="sent"||x.status==="adopted");
   if(selectedView==="__adopted__")return mails.filter(x=>x.status==="adopted");
   return mails.filter(x=>x.status==="adopted"&&x.program===selectedView);
@@ -122,10 +128,31 @@ function filtered(){
   }).sort((a,b)=>episodeNum(a.episode)-episodeNum(b.episode));
 }
 function render(){
-  renderProgramTabs();refreshFilters();const rows=filtered();
+  renderProgramTabs();
+
+  const isMemo=selectedView==="__memo__";
+  $("memoView").hidden=!isMemo;
+  document.querySelector(".summary").hidden=isMemo;
+  document.querySelector(".filters").hidden=isMemo;
+  document.querySelector(".table-wrap").hidden=isMemo;
+  $("fabAddBtn").hidden=isMemo;
+
+  if(isMemo){
+    renderMemos();
+    return;
+  }
+
+  refreshFilters();
+  const rows=filtered();
   const adoptedCount=(selectedView==="__sent__"||selectedView==="__adopted__")?mails.filter(x=>x.status==="adopted").length:rows.length;
-  $("count").textContent=adoptedCount;$("showCount").textContent=rows.length;
-  $("mailTable").innerHTML=rows.map(x=>`<tr data-id="${x.id}" class="${selectedView==="__sent__"&&x.status==="adopted"?"adopted-row":""}"><td><span class="fit-text">${esc(x.episode)}</span></td><td><span class="fit-text">${esc(x.name)}</span></td><td><span class="fit-text">${esc(x.corner)}</span></td><td><span class="fit-text">${esc(x.summary||"—")}</span></td></tr>`).join("");
+  $("count").textContent=adoptedCount;
+  $("showCount").textContent=rows.length;
+  $("mailTable").innerHTML=rows.map(x=>`<tr data-id="${x.id}" class="${selectedView==="__sent__"&&x.status==="adopted"?"adopted-row":""}">
+    <td><span class="fit-text">${esc(x.episode)}</span></td>
+    <td><span class="fit-text">${esc(x.name)}</span></td>
+    <td><span class="fit-text">${esc(x.corner)}</span></td>
+    <td><span class="fit-text">${esc(x.summary||"—")}</span></td>
+  </tr>`).join("");
   requestAnimationFrame(fitAllText);
 }
 function fitAllText(){document.querySelectorAll(".fit-text").forEach(el=>{el.style.transform="scaleX(1)";el.style.width="100%";const cell=el.parentElement,avail=cell.clientWidth-4,need=el.scrollWidth;if(need>avail&&need>0){const scale=Math.max(.55,avail/need);el.style.transform=`scaleX(${scale})`;el.style.width=`${100/scale}%`}})}
@@ -157,25 +184,21 @@ function openDetail(id){
 
   $("detailContent").innerHTML=`
     <div class="detail-grid">
-      <div class="k">番組</div><div class="inline-edit" data-key="program" contenteditable="true">${esc(x.program)}</div>
-      <div class="k">放送回</div><div class="inline-edit" data-key="episode" contenteditable="true">${esc(x.episode||"不明")}</div>
-      <div class="k">放送日</div><div class="inline-date-wrap"><input class="inline-date" data-key="airDate" type="date" value="${esc(x.airDate||"")}"></div>
-      <div class="k">ラジオネーム</div><div class="inline-edit" data-key="name" contenteditable="true">${esc(x.name||"")}</div>
-      <div class="k">コーナー</div><div class="inline-edit" data-key="corner" contenteditable="true">${esc(x.corner||"")}</div>
+      <div class="k">番組</div><div class="detail-gray editable-inline" data-key="program" contenteditable="true">${esc(x.program)}</div>
+      <div class="k">放送回</div><div class="detail-gray editable-inline" data-key="episode" contenteditable="true">${esc(x.episode||"不明")}</div>
+      <div class="k">放送日</div><div class="detail-gray"><input class="detail-date-edit" data-key="airDate" type="date" value="${esc(x.airDate||"")}"></div>
+      <div class="k">ラジオネーム</div><div class="detail-gray editable-inline" data-key="name" contenteditable="true">${esc(x.name||"")}</div>
+      <div class="k">コーナー</div><div class="detail-gray editable-inline" data-key="corner" contenteditable="true">${esc(x.corner||"")}</div>
       <div class="k">状態</div><div>${x.status==="adopted"?"採用":"送信済み"}</div>
     </div>
 
-    <div class="detail-body inline-edit-block" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div>
+    <div class="detail-body detail-gray editable-block-v1" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div>
 
-    ${x.summary!==undefined?`<div class="detail-body"><strong>要約</strong><br><div class="inline-edit-block no-box" data-key="summary" contenteditable="true">${esc(x.summary||"")}</div></div>`:""}
+    ${x.summary?`<div class="detail-body"><strong>要約</strong><br><div class="detail-gray editable-block-v1" data-key="summary" contenteditable="true">${esc(x.summary)}</div></div>`:""}
 
-    <div class="detail-body"><strong>Podcast URL</strong><br>
-      <input class="inline-url" data-key="url" value="${esc(x.url||"")}" placeholder="URL未登録">
-    </div>
+    <div class="detail-body"><strong>Podcast URL</strong><br><input class="detail-url-v1" data-key="url" value="${esc(x.url||"")}" placeholder="URL未登録"></div>
 
-    <div class="detail-body"><strong>メモ</strong><br>
-      <div class="inline-edit-block no-box" data-key="memo" contenteditable="true">${esc(x.memo||"")}</div>
-    </div>
+    ${x.memo?`<div class="detail-body"><strong>メモ</strong><br><div class="detail-gray editable-block-v1" data-key="memo" contenteditable="true">${esc(x.memo)}</div></div>`:""}
   `;
 
   $("detailContent").querySelectorAll("[data-key]").forEach(el=>{
@@ -274,17 +297,79 @@ $("clearPeriodBtn").onclick=()=>{
 
 
 
+
+
+
+
+function formatMemoDate(iso){
+  const d=new Date(iso);
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+function renderMemos(){
+  $("memoTimeline").innerHTML=memoItems
+    .slice()
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+    .map(m=>`<article class="memo-card" data-id="${m.id}">
+      <div class="memo-text">${esc(m.text)}</div>
+      <div class="memo-date">${formatMemoDate(m.createdAt)}</div>
+    </article>`).join("");
+}
+$("memoInput").addEventListener("input",()=>{
+  $("memoCharCount").textContent=`${$("memoInput").value.length} / 500`;
+});
+$("memoPostBtn").onclick=()=>{
+  const text=$("memoInput").value.trim();
+  if(!text)return;
+  memoItems.push({id:uid(),text,createdAt:new Date().toISOString()});
+  localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
+  $("memoInput").value="";
+  $("memoCharCount").textContent="0 / 500";
+  renderMemos();
+};
+
+
+$("fabAddBtn").onclick=()=>openEditor();
+
+
+const THEMES={
+  green:{accent:"#4b9f5b",accentSoft:"#eef8ee"},
+  blue:{accent:"#3f7fcb",accentSoft:"#edf4ff"},
+  purple:{accent:"#7a5bc7",accentSoft:"#f3efff"},
+  orange:{accent:"#d8792b",accentSoft:"#fff3e8"},
+  gray:{accent:"#5d6670",accentSoft:"#f0f2f4"}
+};
+function applyTheme(name){
+  const t=THEMES[name]||THEMES.green;
+  document.documentElement.style.setProperty("--accent",t.accent);
+  document.documentElement.style.setProperty("--accent-soft",t.accentSoft);
+  localStorage.setItem(THEME_KEY,name);
+}
+$("themeBtn").onclick=()=>{
+  $("moreMenu").hidden=true;
+  $("themeDialog").showModal();
+};
+$("closeThemeDialog").onclick=()=>$("themeDialog").close();
+document.querySelectorAll(".theme-choice").forEach(btn=>{
+  btn.onclick=()=>{
+    applyTheme(btn.dataset.theme);
+    $("themeDialog").close();
+  };
+});
+applyTheme(localStorage.getItem(THEME_KEY)||"green");
+
+
+
 let scrollIdleTimer=null;
 const tableScrollArea=document.querySelector(".table-wrap");
 if(tableScrollArea){
   tableScrollArea.addEventListener("scroll",()=>{
     const filters=document.querySelector(".filters");
-    if(!filters)return;
+    if(!filters||selectedView==="__memo__")return;
     filters.classList.add("filters-hidden");
     clearTimeout(scrollIdleTimer);
     scrollIdleTimer=setTimeout(()=>{
       filters.classList.remove("filters-hidden");
-    },350);
+    },300);
   },{passive:true});
 }
 
