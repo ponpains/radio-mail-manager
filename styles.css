@@ -770,3 +770,78 @@ main{
 .program-settings-body{padding:14px}
 .program-settings-body label{margin:9px 0}
 .program-settings-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+
+
+/* ===== ver.8 layout fix =====
+   原因: stickyなヘッダーと番組タブに加え、番組タブの top:64px が残っていたため、
+   タイトルと番組タブの間に大きな空白ができ、サマリー欄が画面外へ押し出されていた。
+*/
+html,body{
+  height:100%;
+  min-height:100dvh;
+}
+body{
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.topbar{
+  position:relative!important;
+  top:auto!important;
+  flex:0 0 auto!important;
+  min-height:64px!important;
+  margin:0!important;
+  padding:10px 14px!important;
+}
+main{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+  padding-bottom:0!important;
+}
+.program-tabs{
+  position:relative!important;
+  top:auto!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:8px 10px!important;
+}
+#summaryBar{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:relative!important;
+  top:auto!important;
+  flex:0 0 88px!important;
+  height:88px!important;
+  min-height:88px!important;
+  margin:0!important;
+  padding:12px 14px!important;
+  align-items:center!important;
+  gap:18px!important;
+  border-bottom:1px solid #ddd!important;
+  background:#fff!important;
+}
+#summaryBar[hidden]{display:none!important}
+.filters{
+  position:relative!important;
+  top:auto!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+}
+.table-wrap{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+.table-wrap thead th,.table-wrap th{
+  position:sticky!important;
+  top:0!important;
+  z-index:12!important;
+  background:#f7f7f7!important;
+}
