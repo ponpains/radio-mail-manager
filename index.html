@@ -7,17 +7,27 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
-  <title>ラジオ採用メール管理</title>
+  <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>採用メール</h1></div>
-  <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー</h1></div>
+  <div class="top-actions">
+    <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
+    <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
+  </div>
+  <div id="moreMenu" class="more-menu" hidden>
+    <button id="backupBtn">バックアップ</button>
+    <button id="restoreBtn">復元</button>
+    <button id="csvBtn">CSV書出</button>
+    <input id="restoreInput" type="file" accept=".json,application/json" hidden>
+  </div>
 </header>
+
 <main>
   <section class="program-tabs" id="programTabs"></section>
   <section class="summary">
-    <div><strong id="count">0</strong><span>この番組の採用数</span></div>
+    <div><strong id="count">0</strong><span>採用</span></div>
     <div><strong id="showCount">0</strong><span>表示中</span></div>
     <button id="addBtn" class="primary">＋ 追加</button>
   </section>
@@ -35,29 +45,41 @@
     </table>
   </section>
 </main>
-<nav class="bottom-nav">
-  <button id="backupBtn">バックアップ</button><button id="restoreBtn">復元</button><button id="csvBtn">CSV書出</button>
-  <input id="restoreInput" type="file" accept=".json,application/json" hidden>
-</nav>
+
 <dialog id="editDialog">
   <form method="dialog" id="mailForm">
-    <div class="dialog-head"><h2 id="dialogTitle">採用メールを追加</h2><button type="button" id="closeDialog" class="close">×</button></div>
-    <label>番組<input id="program" required placeholder="けれけれ"></label>
-    <label>放送回<input id="episode" required placeholder="17回"></label>
-    <label>放送日<input id="airDate" type="date"></label>
-    <label>ラジオネーム<input id="name" required placeholder="ななお"></label>
-    <label>コーナー<input id="corner" placeholder="ラジオ猫"></label>
-    <label>メール本文<textarea id="body" rows="8" placeholder="採用されたメール本文"></textarea></label>
-    <label>要約<textarea id="summary" rows="3" placeholder="一覧に表示する短い要約"></textarea></label>
-    <label>URL<input id="url" type="url" placeholder="https://..."></label>
-    <label>メモ<textarea id="memo" rows="3" placeholder="反応・感想など"></textarea></label>
-    <div class="form-actions"><button type="button" id="deleteBtn" class="danger" hidden>削除</button><span></span><button type="button" id="cancelBtn" class="secondary">キャンセル</button><button type="submit" class="primary">保存</button></div>
+    <div class="dialog-head"><h2 id="dialogTitle">メールを追加</h2><button type="button" id="closeDialog" class="close">×</button></div>
+    <div class="form-grid">
+      <label>番組<input id="program" list="programList" placeholder="番組"><datalist id="programList"></datalist></label>
+      <label>放送回<input id="episode" placeholder="放送回"></label>
+      <label>放送日<input id="airDate" type="date"></label>
+      <label>ラジオネーム<input id="name" list="nameList" placeholder="ラジオネーム"><datalist id="nameList"></datalist></label>
+      <label>コーナー<input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist></label>
+      <label class="wide">メール本文<textarea id="body" rows="4" placeholder="メール本文"></textarea></label>
+      <label class="wide">要約<textarea id="summary" rows="2" placeholder="要約"></textarea></label>
+      <label class="wide">URL<input id="url" type="url" placeholder="https://..."></label>
+      <label class="wide">メモ<textarea id="memo" rows="2" placeholder="メモ"></textarea></label>
+    </div>
+    <div class="form-actions sticky-actions">
+      <button type="button" id="deleteBtn" class="danger" hidden>削除</button><span></span>
+      <button type="button" id="cancelBtn" class="secondary">キャンセル</button><button type="submit" class="primary">保存</button>
+    </div>
   </form>
 </dialog>
+
 <dialog id="detailDialog">
-  <div class="dialog-head"><h2 id="detailTitle">採用メール</h2><button type="button" id="closeDetail" class="close">×</button></div>
+  <div class="dialog-head">
+    <h2 id="detailTitle">メール詳細</h2>
+    <button type="button" id="favoriteBtn" class="favorite-btn" aria-label="お気に入り">☆</button>
+    <button type="button" id="closeDetail" class="close">×</button>
+  </div>
   <div id="detailContent"></div>
-  <div class="form-actions detail-actions"><button id="editFromDetail" class="secondary">編集</button><span></span><button id="closeDetail2" class="primary">閉じる</button></div>
+  <div class="detail-actions">
+    <button id="deleteFromDetailBtn" class="danger">削除</button>
+    <button id="markAdoptedBtn" class="primary" hidden>採用メールに追加</button>
+    <button id="editFromDetail" class="secondary">編集</button>
+    <button id="closeDetail2" class="primary">閉じる</button>
+  </div>
 </dialog>
 <div id="toast" class="toast"></div>
 <script src="app.js"></script>
