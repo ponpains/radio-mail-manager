@@ -32,12 +32,12 @@ function adoptedPrograms(){return [...new Set(mails.filter(x=>x.status==="adopte
 function renderProgramTabs(){const ps=adoptedPrograms();$("programTabs").innerHTML=`<button class="program-tab sent-tab ${selectedView==="__sent__"?"active":""}" data-view="__sent__">送信済み</button>`+ps.map(p=>`<button class="program-tab ${p===selectedView?"active":""}" data-view="${esc(p)}">${esc(p)}</button>`).join("");document.querySelectorAll(".program-tab[data-view]").forEach(b=>b.onclick=()=>{selectedView=b.dataset.view;localStorage.setItem("radioMailManager.selectedView",selectedView);render()})}
 function currentRows(){if(selectedView==="__sent__")return mails.filter(x=>x.status==="sent"||x.status==="adopted");return mails.filter(x=>x.status==="adopted"&&x.program===selectedView)}
 function options(sel,vals,label){const cur=sel.value;sel.innerHTML=`<option value="">${label}：すべて</option>`+vals.map(v=>`<option>${esc(v)}</option>`).join("");sel.value=cur}
-function refreshFilters(){const scoped=currentRows();options($("episodeFilter"),[...new Set(scoped.map(x=>x.episode).filter(Boolean))],"放送回");options($("cornerFilter"),[...new Set(scoped.map(x=>x.corner).filter(Boolean))].sort(),"コーナー")}
-function filtered(){const q=$("search").value.trim().toLowerCase(),e=$("episodeFilter").value,c=$("cornerFilter").value;return currentRows().filter(x=>{const hay=[x.episode,x.name,x.corner,x.body,x.summary,x.memo].join(" ").toLowerCase();return(!q||hay.includes(q))&&(!e||x.episode===e)&&(!c||x.corner===c)}).sort((a,b)=>episodeNum(a.episode)-episodeNum(b.episode))}
+function refreshFilters(){const scoped=currentRows();options($("nameFilter"),[...new Set(scoped.map(x=>x.name).filter(Boolean))].sort(),"ラジオネーム");options($("cornerFilter"),[...new Set(scoped.map(x=>x.corner).filter(Boolean))].sort(),"コーナー")}
+function filtered(){const q=$("search").value.trim().toLowerCase(),n=$("nameFilter").value,c=$("cornerFilter").value;return currentRows().filter(x=>{const hay=[x.episode,x.name,x.corner,x.body,x.summary,x.memo].join(" ").toLowerCase();return(!q||hay.includes(q))&&(!n||x.name===n)&&(!c||x.corner===c)}).sort((a,b)=>episodeNum(a.episode)-episodeNum(b.episode))}
 function render(){renderProgramTabs();refreshFilters();const rows=filtered();const adoptedCount=selectedView==="__sent__"?mails.filter(x=>x.status==="adopted").length:rows.length;$("count").textContent=adoptedCount;$("showCount").textContent=rows.length;$("mailTable").innerHTML=rows.map(x=>`<tr data-id="${x.id}" class="${selectedView==="__sent__"&&x.status==="adopted"?"adopted-row":""}"><td><span class="fit-text">${esc(x.episode)}</span></td><td><span class="fit-text">${esc(x.name)}</span></td><td><span class="fit-text">${esc(x.corner)}</span></td><td><span class="fit-text">${esc(x.summary||"—")}</span></td></tr>`).join("");requestAnimationFrame(fitAllText)}
 function fitAllText(){document.querySelectorAll(".fit-text").forEach(el=>{el.style.transform="scaleX(1)";el.style.width="100%";const cell=el.parentElement,avail=cell.clientWidth-4,need=el.scrollWidth;if(need>avail&&need>0){const scale=Math.max(.55,avail/need);el.style.transform=`scaleX(${scale})`;el.style.width=`${100/scale}%`}})}
 window.addEventListener("resize",()=>requestAnimationFrame(fitAllText));
-$("mailTable").addEventListener("click",e=>{const tr=e.target.closest("tr");if(tr)openDetail(tr.dataset.id)});["search","episodeFilter","cornerFilter"].forEach(id=>$(id).addEventListener("input",render));
+$("mailTable").addEventListener("click",e=>{const tr=e.target.closest("tr");if(tr)openDetail(tr.dataset.id)});["search","nameFilter","cornerFilter"].forEach(id=>$(id).addEventListener("input",render));
 function uniqueValues(key){return [...new Set(mails.map(x=>x[key]).filter(Boolean))].sort()}
 function fillDatalists(){$("programList").innerHTML=uniqueValues("program").map(v=>`<option value="${esc(v)}"></option>`).join("");$("nameList").innerHTML=uniqueValues("name").map(v=>`<option value="${esc(v)}"></option>`).join("");$("cornerList").innerHTML=uniqueValues("corner").map(v=>`<option value="${esc(v)}"></option>`).join("")}
 function resetForm(){editingId=null;$("dialogTitle").textContent=selectedView==="__sent__"?"送信済みメールを追加":"採用メールを追加";$("deleteBtn").hidden=true;$("mailForm").reset();fillDatalists();if(selectedView!=="__sent__")$("program").value=selectedView}
@@ -57,11 +57,12 @@ $("restoreInput").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{
 $("csvBtn").onclick=()=>{const cols=["状態","お気に入り","番組","放送回","放送日","ラジオネーム","コーナー","メール本文","要約","URL","メモ"];const rows=mails.map(x=>[x.status==="adopted"?"採用":"送信済み",x.favorite?"★":"",x.program,x.episode,x.airDate,x.name,x.corner,x.body,x.summary,x.url,x.memo]);const csv="\uFEFF"+[cols,...rows].map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\r\n");downloadBlob("radio-mail-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));toast("CSVを書き出しました")};
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("installBtn").hidden=false});$("installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$("installBtn").hidden=true};window.addEventListener("appinstalled",()=>$("installBtn").hidden=true);if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));render();
 
-const detailDeleteBtn=document.getElementById("detailDeleteBtn");
-if(detailDeleteBtn){
-  detailDeleteBtn.onclick=()=>{
-    const x=mails.find(m=>m.id===currentDetailId);
-    if(!x)return;
+
+
+const detailDeleteBtnV6=document.getElementById("detailDeleteBtn");
+if(detailDeleteBtnV6){
+  detailDeleteBtnV6.onclick=()=>{
+    if(!currentDetailId)return;
     if(confirm("このメールを削除しますか？")){
       mails=mails.filter(m=>m.id!==currentDetailId);
       save();

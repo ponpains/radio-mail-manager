@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=6">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
@@ -34,13 +34,18 @@
   <section class="filters">
     <input id="search" type="search" placeholder="🔍 ラジオネーム・コーナー・本文を検索">
     <div class="filter-row">
-      <select id="episodeFilter"><option value="">放送回：すべて</option></select>
+      <select id="nameFilter"><option value="">ラジオネーム：すべて</option></select>
       <select id="cornerFilter"><option value="">コーナー：すべて</option></select>
     </div>
   </section>
   <section class="table-wrap">
     <table>
-      <thead><tr><th>放送回</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th></tr></thead>
+      <thead><tr>
+      <th>放送回</th>
+      <th>ラジオネーム</th>
+      <th>コーナー</th>
+      <th>本文</th>
+    </tr></thead>
       <tbody id="mailTable"></tbody>
     </table>
   </section>
@@ -49,7 +54,7 @@
 <dialog id="editDialog">
   <form method="dialog" id="mailForm">
     <div class="dialog-head"><h2 id="dialogTitle">メールを追加</h2><button type="button" id="closeDialog" class="close">×</button></div>
-    <div class="form-grid">
+    <div class="form-grid one-column">
       <label>番組<input id="program" list="programList" placeholder="番組"><datalist id="programList"></datalist></label>
       <label>放送回<input id="episode" placeholder="放送回"></label>
       <label>放送日<input id="airDate" type="date"></label>
@@ -75,13 +80,14 @@
   </div>
   <div id="detailContent"></div>
   <div class="detail-actions">
+    <button id="detailDeleteBtn" class="danger">削除</button>
     <button id="deleteFromDetailBtn" class="danger">削除</button>
     <button id="markAdoptedBtn" class="primary" hidden>採用メールに追加</button>
-    <button id="detailDeleteBtn" class="danger">削除</button><button id="editFromDetail" class="secondary">編集</button>
+    <button id="editFromDetail" class="secondary">編集</button>
     <button id="closeDetail2" class="primary">閉じる</button>
   </div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
