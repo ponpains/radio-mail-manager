@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver2">
+  <link rel="stylesheet" href="styles.css?v=ver3">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.2</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.3</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -23,6 +23,11 @@
     <input id="restoreInput" type="file" accept=".json,application/json" hidden>
   </div>
 </header>
+<div id="programMenu" class="context-menu" hidden>
+  <button id="renameProgramBtn">名前の変更</button>
+  <button id="deleteProgramBtn" class="danger-menu">削除</button>
+</div>
+
 
 <main>
   <section class="program-tabs" id="programTabs"></section>
@@ -36,11 +41,7 @@
     <div class="filter-row">
       <select id="nameFilter"><option value="">ラジオネーム：すべて</option></select>
       <select id="cornerFilter"><option value="">コーナー：すべて</option></select>
-      <div class="period-filter">
-        <input id="fromDateFilter" type="date" aria-label="開始日">
-        <span>〜</span>
-        <input id="toDateFilter" type="date" aria-label="終了日">
-      </div>
+      <button id="periodFilterBtn" class="period-filter-btn" type="button">期間指定</button>
       <button id="favoriteFilterBtn" class="favorite-filter" type="button" aria-pressed="false">☆ お気に入り</button>
     </div>
   </section>
@@ -94,7 +95,23 @@
     <button id="closeDetail2" class="primary">閉じる</button>
   </div>
 </dialog>
+
+<dialog id="periodDialog" class="compact-dialog">
+  <div class="dialog-head">
+    <h2>期間指定</h2>
+    <button type="button" id="closePeriodDialog" class="close">×</button>
+  </div>
+  <div class="period-dialog-body">
+    <label>開始日<input id="fromDateFilter" type="date"></label>
+    <label>終了日<input id="toDateFilter" type="date"></label>
+    <div class="period-dialog-actions">
+      <button type="button" id="clearPeriodBtn" class="secondary">クリア</button>
+      <button type="button" id="applyPeriodBtn" class="primary">適用</button>
+    </div>
+  </div>
+</dialog>
+
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver2"></script>
+<script src="app.js?v=ver3"></script>
 </body>
 </html>

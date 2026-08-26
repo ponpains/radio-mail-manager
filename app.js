@@ -44,6 +44,69 @@ function renderProgramTabs(){
   });
   setTimeout(bindTabLongPress,0);
 }
+
+let longPressTimer=null;
+let programMenuTarget=null;
+
+function bindTabLongPress(){
+  document.querySelectorAll('.program-tab[data-view]').forEach(btn=>{
+    const view=btn.dataset.view;
+    if(view==="__sent__"||view==="__adopted__")return;
+
+    const start=(ev)=>{
+      clearTimeout(longPressTimer);
+      longPressTimer=setTimeout(()=>{
+        programMenuTarget=view;
+        const menu=$("programMenu");
+        const rect=btn.getBoundingClientRect();
+        menu.style.left=Math.min(rect.left,window.innerWidth-menu.offsetWidth-10)+"px";
+        menu.style.top=(rect.bottom+8)+"px";
+        menu.hidden=false;
+      },600);
+    };
+    const cancel=()=>{clearTimeout(longPressTimer);longPressTimer=null};
+
+    btn.addEventListener("touchstart",start,{passive:true});
+    btn.addEventListener("touchend",cancel,{passive:true});
+    btn.addEventListener("touchmove",cancel,{passive:true});
+    btn.addEventListener("mousedown",start);
+    btn.addEventListener("mouseup",cancel);
+    btn.addEventListener("mouseleave",cancel);
+    btn.addEventListener("contextmenu",e=>e.preventDefault());
+  });
+}
+
+$("renameProgramBtn").onclick=()=>{
+  const program=programMenuTarget;
+  $("programMenu").hidden=true;
+  if(!program)return;
+  const nn=prompt("新しい番組名",program);
+  if(!nn||nn===program)return;
+  mails=mails.map(x=>x.program===program?{...x,program:nn}:x);
+  if(selectedView===program)selectedView=nn;
+  localStorage.setItem("radioMailManager.selectedView",selectedView);
+  save();
+};
+
+$("deleteProgramBtn").onclick=()=>{
+  const program=programMenuTarget;
+  $("programMenu").hidden=true;
+  if(!program)return;
+  if(confirm(`「${program}」のメールをすべて削除しますか？`)){
+    mails=mails.filter(x=>x.program!==program);
+    if(selectedView===program)selectedView="__adopted__";
+    localStorage.setItem("radioMailManager.selectedView",selectedView);
+    save();
+  }
+};
+
+document.addEventListener("click",e=>{
+  if(!$("programMenu").hidden && !$("programMenu").contains(e.target)){
+    $("programMenu").hidden=true;
+  }
+});
+
+
 function currentRows(){
   if(selectedView==="__sent__")return mails.filter(x=>x.status==="sent"||x.status==="adopted");
   if(selectedView==="__adopted__")return mails.filter(x=>x.status==="adopted");
@@ -83,34 +146,53 @@ $("addBtn").onclick=()=>openEditor();$("cancelBtn").onclick=()=>$("editDialog").
 $("deleteBtn").onclick=()=>{if(editingId&&confirm("このメールを削除しますか？")){mails=mails.filter(x=>x.id!==editingId);save();$("editDialog").close();toast("削除しました")}};
 $("mailForm").addEventListener("submit",e=>{e.preventDefault();const old=editingId?mails.find(m=>m.id===editingId):null;const status=old?.status||(selectedView==="__sent__"?"sent":"adopted");const x={id:editingId||uid(),program:$("program").value.trim()||"不明",episode:$("episode").value.trim()||"不明",airDate:$("airDate").value,name:$("name").value.trim(),corner:$("corner").value.trim(),body:$("body").value,summary:$("summary").value.trim(),url:$("url").value.trim(),memo:$("memo").value,favorite:old?.favorite||false,status};if(editingId)mails=mails.map(m=>m.id===editingId?x:m);else mails.push(x);save();$("editDialog").close();toast(editingId?"更新しました":"追加しました")});
 function openDetail(id){
-  currentDetailId=id;const x=mails.find(m=>m.id===id);if(!x)return;
+  currentDetailId=id;
+  const x=mails.find(m=>m.id===id);
+  if(!x)return;
+
   $("detailTitle").textContent=x.summary||x.corner||"メール詳細";
-  $("favoriteBtn").textContent=x.favorite?"★":"☆";$("favoriteBtn").classList.toggle("active",x.favorite);
+  $("favoriteBtn").textContent=x.favorite?"★":"☆";
+  $("favoriteBtn").classList.toggle("active",x.favorite);
   $("markAdoptedBtn").hidden=x.status==="adopted";
-  $("detailContent").innerHTML=`<div class="detail-grid">
-    <div class="k">番組</div><div class="editable-field" data-key="program" contenteditable="true">${esc(x.program)}</div>
-    <div class="k">放送回</div><div class="editable-field" data-key="episode" contenteditable="true">${esc(x.episode||"不明")}</div>
-    <div class="k">放送日</div><div><input class="detail-input" data-key="airDate" type="date" value="${esc(x.airDate||"")}"></div>
-    <div class="k">ラジオネーム</div><div class="editable-field" data-key="name" contenteditable="true">${esc(x.name||"")}</div>
-    <div class="k">コーナー</div><div class="editable-field" data-key="corner" contenteditable="true">${esc(x.corner||"")}</div>
-    <div class="k">状態</div><div>${x.status==="adopted"?"採用":"送信済み"}</div>
-  </div>
-  <div class="detail-body editable-block" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div>
-  <div class="detail-body"><strong>要約</strong><br><div class="editable-block" data-key="summary" contenteditable="true">${esc(x.summary||"")}</div></div>
-  <div class="detail-body"><strong>Podcast URL</strong><br><input class="detail-url-input" data-key="url" value="${esc(x.url||"")}"></div>
-  <div class="detail-body"><strong>メモ</strong><br><div class="editable-block" data-key="memo" contenteditable="true">${esc(x.memo||"")}</div></div>`;
+
+  $("detailContent").innerHTML=`
+    <div class="detail-grid">
+      <div class="k">番組</div><div class="inline-edit" data-key="program" contenteditable="true">${esc(x.program)}</div>
+      <div class="k">放送回</div><div class="inline-edit" data-key="episode" contenteditable="true">${esc(x.episode||"不明")}</div>
+      <div class="k">放送日</div><div class="inline-date-wrap"><input class="inline-date" data-key="airDate" type="date" value="${esc(x.airDate||"")}"></div>
+      <div class="k">ラジオネーム</div><div class="inline-edit" data-key="name" contenteditable="true">${esc(x.name||"")}</div>
+      <div class="k">コーナー</div><div class="inline-edit" data-key="corner" contenteditable="true">${esc(x.corner||"")}</div>
+      <div class="k">状態</div><div>${x.status==="adopted"?"採用":"送信済み"}</div>
+    </div>
+
+    <div class="detail-body inline-edit-block" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div>
+
+    ${x.summary!==undefined?`<div class="detail-body"><strong>要約</strong><br><div class="inline-edit-block no-box" data-key="summary" contenteditable="true">${esc(x.summary||"")}</div></div>`:""}
+
+    <div class="detail-body"><strong>Podcast URL</strong><br>
+      <input class="inline-url" data-key="url" value="${esc(x.url||"")}" placeholder="URL未登録">
+    </div>
+
+    <div class="detail-body"><strong>メモ</strong><br>
+      <div class="inline-edit-block no-box" data-key="memo" contenteditable="true">${esc(x.memo||"")}</div>
+    </div>
+  `;
+
   $("detailContent").querySelectorAll("[data-key]").forEach(el=>{
-    const saveField=()=>{
-      const m=mails.find(mm=>mm.id===currentDetailId);if(!m)return;
+    const commit=()=>{
+      const m=mails.find(mm=>mm.id===currentDetailId);
+      if(!m)return;
       const key=el.dataset.key;
       let val=(el.tagName==="INPUT"?el.value:el.innerText).trim();
       if(key==="episode"&&!val)val="不明";
       m[key]=val;
-      save();
+      localStorage.setItem(KEY,JSON.stringify(mails));
+      render();
     };
-    el.addEventListener("blur",saveField);
-    if(el.tagName==="INPUT")el.addEventListener("change",saveField);
+    el.addEventListener("blur",commit);
+    if(el.tagName==="INPUT")el.addEventListener("change",commit);
   });
+
   $("detailDialog").showModal();
 }
 $("favoriteBtn").onclick=()=>{const x=mails.find(m=>m.id===currentDetailId);if(!x)return;x.favorite=!x.favorite;save();$("favoriteBtn").textContent=x.favorite?"★":"☆";$("favoriteBtn").classList.toggle("active",x.favorite);toast(x.favorite?"お気に入りに追加":"お気に入りを解除")};
@@ -166,44 +248,43 @@ swipeArea.addEventListener("touchend",e=>{
 
 render();
 
-let longPressTimer=null;
-function bindTabLongPress(){
-  document.querySelectorAll('.program-tab[data-view]').forEach(btn=>{
-    const view=btn.dataset.view;
-    if(view==="__sent__"||view==="__adopted__")return;
-    const start=()=>{longPressTimer=setTimeout(()=>showTabOptions(view),600)};
-    const cancel=()=>{clearTimeout(longPressTimer);longPressTimer=null};
-    btn.addEventListener("touchstart",start,{passive:true});
-    btn.addEventListener("touchend",cancel,{passive:true});
-    btn.addEventListener("touchmove",cancel,{passive:true});
-    btn.addEventListener("mousedown",start);
-    btn.addEventListener("mouseup",cancel);
-    btn.addEventListener("mouseleave",cancel);
-  });
-}
-function showTabOptions(program){
-  const choice=prompt(`「${program}」\n1: 名前の変更\n2: 削除`);
-  if(choice==="1"){
-    const nn=prompt("新しい番組名",program);
-    if(!nn||nn===program)return;
-    mails=mails.map(x=>x.program===program?{...x,program:nn}:x);
-    if(selectedView===program)selectedView=nn;
-    save();
-  }else if(choice==="2"){
-    if(confirm(`「${program}」のメールをすべて削除しますか？`)){
-      mails=mails.filter(x=>x.program!==program);
-      if(selectedView===program)selectedView="__adopted__";
-      save();
-    }
-  }
+
+
+
+
+
+$("periodFilterBtn").onclick=()=>$("periodDialog").showModal();
+$("closePeriodDialog").onclick=()=>$("periodDialog").close();
+$("applyPeriodBtn").onclick=()=>{
+  const from=$("fromDateFilter").value;
+  const to=$("toDateFilter").value;
+  $("periodFilterBtn").classList.toggle("active",!!(from||to));
+  $("periodFilterBtn").textContent=(from||to)?"期間指定中":"期間指定";
+  $("periodDialog").close();
+  render();
+};
+$("clearPeriodBtn").onclick=()=>{
+  $("fromDateFilter").value="";
+  $("toDateFilter").value="";
+  $("periodFilterBtn").classList.remove("active");
+  $("periodFilterBtn").textContent="期間指定";
+  $("periodDialog").close();
+  render();
+};
+
+
+
+let scrollIdleTimer=null;
+const tableScrollArea=document.querySelector(".table-wrap");
+if(tableScrollArea){
+  tableScrollArea.addEventListener("scroll",()=>{
+    const filters=document.querySelector(".filters");
+    if(!filters)return;
+    filters.classList.add("filters-hidden");
+    clearTimeout(scrollIdleTimer);
+    scrollIdleTimer=setTimeout(()=>{
+      filters.classList.remove("filters-hidden");
+    },350);
+  },{passive:true});
 }
 
-let lastScrollY=0;
-window.addEventListener("scroll",()=>{
-  const y=window.scrollY;
-  const filters=document.querySelector(".filters");
-  if(!filters)return;
-  if(y>lastScrollY+10 && y>80)filters.classList.add("filters-hidden");
-  else if(y<lastScrollY-10 || y<30)filters.classList.remove("filters-hidden");
-  lastScrollY=y;
-},{passive:true});

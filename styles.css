@@ -210,3 +210,152 @@ main{min-height:calc(100dvh - 64px);display:flex;flex-direction:column}
   outline:2px solid #9ccca5;
   background:#fff;
 }
+
+
+/* ===== ver.3 ===== */
+
+/* Keep title, program tabs and table header visible. Only search/filter block hides. */
+.topbar{
+  position:sticky!important;
+  top:0!important;
+  z-index:30!important;
+}
+.program-tabs{
+  position:sticky!important;
+  top:64px!important;
+  z-index:29!important;
+}
+.filters{
+  position:relative!important;
+  top:auto!important;
+  z-index:20!important;
+  transition:max-height .18s ease,opacity .18s ease,padding .18s ease,margin .18s ease;
+  max-height:120px;
+}
+.filters.filters-hidden{
+  opacity:0!important;
+  max-height:0!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border-bottom:0!important;
+}
+
+/* The table uses remaining screen space on any phone. */
+html,body{height:100%}
+body{min-height:100dvh}
+main{
+  min-height:calc(100dvh - 64px);
+  display:flex;
+  flex-direction:column;
+}
+.table-wrap{
+  flex:1 1 auto!important;
+  height:auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+.table-wrap thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:24!important;
+  background:#f7f7f7!important;
+}
+
+/* Period button */
+.period-filter-btn{
+  flex:0 0 auto;
+  height:31px;
+  padding:4px 7px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  background:#fff;
+  font-size:10.5px;
+  white-space:nowrap;
+}
+.period-filter-btn.active{
+  border-color:#4b9f5b;
+  background:#eef8ee;
+  color:#2e6f39;
+  font-weight:700;
+}
+.compact-dialog{
+  width:min(88vw,360px)!important;
+}
+.period-dialog-body{
+  padding:12px 14px;
+}
+.period-dialog-body label{
+  margin:8px 0;
+}
+.period-dialog-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:12px;
+}
+
+/* Program long-press menu, styled like the top-right more menu. */
+.context-menu{
+  position:fixed;
+  min-width:150px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:10px;
+  box-shadow:0 8px 28px #0002;
+  overflow:hidden;
+  z-index:50;
+}
+.context-menu button{
+  display:block;
+  width:100%;
+  border:0;
+  border-bottom:1px solid #eee;
+  background:#fff;
+  text-align:left;
+  padding:12px 14px;
+  font-size:14px;
+}
+.context-menu button:last-child{border-bottom:0}
+.context-menu .danger-menu{color:#c62828}
+
+/* Detail screen: ver.1 layout, but gray areas are directly editable. */
+#detailDialog{
+  width:min(90vw,500px)!important;
+  max-height:82vh!important;
+}
+#detailDialog .detail-grid{
+  grid-template-columns:68px 1fr!important;
+  gap:5px 8px!important;
+  padding:10px 12px!important;
+  font-size:12px!important;
+}
+#detailDialog .detail-body{
+  margin:0 12px 8px!important;
+  padding:8px 9px!important;
+  line-height:1.55!important;
+  font-size:12px!important;
+  background:#fafafa!important;
+}
+.inline-edit,.inline-edit-block,.inline-date,.inline-url{
+  width:100%;
+  min-height:28px;
+  padding:4px 5px;
+  background:#f3f3f3;
+  border:1px solid #e1e1e1;
+  border-radius:6px;
+  font:inherit;
+}
+.inline-edit-block{
+  white-space:pre-wrap;
+  line-height:1.5;
+}
+.no-box{
+  margin-top:4px;
+}
+.inline-edit:focus,.inline-edit-block:focus,.inline-date:focus,.inline-url:focus{
+  outline:2px solid #9ccca5;
+  background:#fff;
+}
