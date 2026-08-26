@@ -11,12 +11,20 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
 function episodeNum(s){const m=String(s||"").match(/\d+/);return m?Number(m[0]):999999}
 function save(){localStorage.setItem(KEY,JSON.stringify(mails));render()}
-const sampleRows=[["3回","しゃかかな","ふつおた","ラジオ界の帝王"],["4回","ななお","ラジオ猫","へばにゃん"],["4回","しゃかかな","ラジオ猫","ラジコ"],["5回","ガンバレないわ","リアクション","自分の声が聞けない"],["6回","しゃかかな","リアクション","最初にグーを出す"],["8回","ななお","ふつおた","ラジオ界のドン"],["9回","しゃかかな","リアクション","モータウンビート"],["11回","ガンバレないわ","ラジオ猫","やぎにゃん"],["11回","しゃかかな","共食い","かまたろう"],["12回","ななお","リアクション","ラジオの曲SP"],["12回","ガンバレないわ","聞いてけれ","笑顔中"],["13回","しゃかかな","ラジオ猫","ディスクユニオン"],["13回","ななお","ハガキ","絵描き歌"],["14回","ななお","聞いてけれ","たまご"],["14回","ななお","聞いてけれ","第一子"],["15回","ななお","共食い","肉のたかだ"],["16回","ななお","ふつおた","社会＆文化"],["16回","しゃかかな","リアクション","永田詩央里まさか"],["17回","ななお","リアクション","おたがき"],["17回","ガンバレないわ","ラジオ猫","うまとマハンバー"],["17回","しゃかかな","ラジオ猫","しおりん"],["19回","ななお","ふつおた","象拳"],["19回","ななお","ラジオ猫","アーちゃん"],["20回","アンミカの監視下","ラジオネーム","アンミカの監視下"],["21回","ななお","リアクション","出禁宣言"],["22回","しゃかかな","ふつおた","けれけれ流行語大賞"],["22回","ガンバレないわ","しおり","黒又山"],["23回","ななお","ふつおた","radikoマスコット"],["23回","しゃかかな","ラジオ猫","スポンサー募集中"],["23回","ななお","ラジオ猫","寿限無"],["24回","しゃかかな","ラジオ猫","手洗いうがい"],["24回","ななお","しおり","小坂町のクリスマス"],["29回","ななお","リアクション","映画館のサブスク"],["29回","ななお","ラジオ猫","ミルクボーイ"],["31回","ななお","リアクション","総集編はラブレター"],["32回","ななお","ふつおた","自炊ニュース"],["32回","ななお","ラジオ猫","サンタ"],["33回","ななお","ラジオ猫","未来から来た永田"],["34回","ななお","ハガキ","ぷるぷるちくわ"],["34回","しゃかかな","聞いてけれ","フードコート"],["34回","しゃかかな","ふつおた","さようなまほげ"],["35回","ななお","しおり","かまくらの権五郎"],["37回","ガンバレないわ","ラジオ猫","まだラジオ猫になれない"],["37回","しゃかかな","ラジオ猫","豚汁"],["38回","ななお","リアクション","ギャラクシー賞"],["38回","ななお","聞いてけれ","自販機のホスピタリティ"],["39回","ななお","ラジオ猫","ワタナベ"],["39回","ななお","ラジオ猫","じゃあ、あんたが"],["41回","ななお","聞いてけれ","郷ひろみ"],["42回","ななお","ラジオ猫","こけけ"],["47回","しゃかかな","ラジオ猫","N〜愛すべき猫がい"],["50回","ななお","リアクション","エグゾディア"],["50回","ななお","リアクション","しいたけの擬音"],["53回","ななお","リアクション","偽の生放送"],["54回","ななお","ふつおた","1周年"],["54回","ななお","ハガキ","けれけれすごろく"],["55回","ななお","ラジオ猫","ハリソン山中"],["55回","ななお","ラジオ猫","秋田犬"],["58回","ななお","ラジオ猫","アレクサ"]];
-if(!mails.length){mails=[]}
-// けれけれの既存リストを自動補完。既存の手入力データは残し、同じ4項目の行は重複追加しない。
-for(const [episode,name,corner,summary] of sampleRows){
-  const exists=mails.some(x=>x.program==="けれけれ"&&x.status!=="sent"&&x.episode===episode&&x.name===name&&x.corner===corner&&(x.summary===summary||x.body===summary));
-  if(!exists)mails.push({id:uid(),program:"けれけれ",episode,airDate:"",name,corner,body:"",summary,url:"",memo:"",favorite:false,status:"adopted"});
+const completeKerereRows=[["3回", "しゃかかな", "ふつおた", "ラジオ界の帝王"], ["4回", "ななお", "ラジオ猫", "へばにゃん"], ["4回", "しゃかかな", "ラジオ猫", "ラジコ"], ["5回", "ガンバレないわ", "リアクション", "自分の声が聞けない"], ["6回", "しゃかかな", "リアクション", "最初にグーを出す"], ["8回", "ななお", "ふつおた", "ラジオ界のドン"], ["9回", "しゃかかな", "リアクション", "モータウンビート"], ["11回", "ガンバレないわ", "ラジオ猫", "やぎにゃん"], ["11回", "しゃかかな", "共食い", "かまたろう"], ["12回", "ななお", "リアクション", "ラジオの曲SP"], ["12回", "ガンバレないわ", "聞いてけれ", "笑顔中"], ["13回", "しゃかかな", "ラジオ猫", "ディスクユニオン"], ["13回", "ななお", "ハガキ", "絵描き歌"], ["14回", "ななお", "聞いてけれ", "たまご"], ["14回", "ななお", "聞いてけれ", "第一子"], ["15回", "ななお", "共食い", "肉のたかだ"], ["16回", "ななお", "ふつおた", "社会＆文化"], ["16回", "しゃかかな", "リアクション", "永田詩央里まさか"], ["17回", "ななお", "リアクション", "おたがき"], ["17回", "ガンバレないわ", "ラジオ猫", "うまとマハンバー"], ["17回", "しゃかかな", "ラジオ猫", "しおりん"], ["19回", "ななお", "ふつおた", "象拳"], ["19回", "ななお", "ラジオ猫", "アーちゃん"], ["20回", "アンミカの監視下", "ラジオネーム", "アンミカの監視下"], ["21回", "ななお", "リアクション", "出禁宣言"], ["22回", "しゃかかな", "ふつおた", "けれけれ流行語大賞"], ["22回", "ガンバレないわ", "しおり", "黒又山"], ["23回", "ななお", "ふつおた", "radikoマスコット"], ["23回", "しゃかかな", "ラジオ猫", "スポンサー募集中"], ["23回", "ななお", "ラジオ猫", "寿限無"], ["24回", "しゃかかな", "ラジオ猫", "手洗いうがい"], ["24回", "ななお", "しおり", "小坂町のクリスマス"], ["29回", "ななお", "リアクション", "映画館のサブスク"], ["29回", "ななお", "ラジオ猫", "ミルクボーイ"], ["31回", "ななお", "リアクション", "総集編はラブレター"], ["32回", "ななお", "ふつおた", "自炊ニュース"], ["32回", "ななお", "ラジオ猫", "サンタ"], ["33回", "ななお", "ラジオ猫", "未来から来た永田"], ["34回", "ななお", "ハガキ", "ぷるぷるちくわ"], ["34回", "しゃかかな", "聞いてけれ", "フードコート"], ["34回", "しゃかかな", "ふつおた", "さようなまはげ"], ["35回", "ななお", "しおり", "かまくらの権五郎"], ["37回", "ガンバレないわ", "ラジオ猫", "まだラジオ猫にな"], ["37回", "しゃかかな", "ラジオ猫", "豚汁"], ["38回", "ななお", "リアクション", "ギャラクシー賞"], ["38回", "ななお", "聞いてけれ", "自販機のホスピタ"], ["39回", "ななお", "ラジオ猫", "ワタナベ"], ["39回", "ななお", "ラジオ猫", "じゃあ、あんたが"], ["41回", "ななお", "聞いてけれ", "郷ひろみ"], ["42回", "ななお", "ラジオ猫", "こけけ"], ["47回", "しゃかかな", "ラジオ猫", "N〜愛すべき猫がい"], ["50回", "ななお", "リアクション", "エグゾディア"], ["50回", "ななお", "リアクション", "しいたけの擬音"], ["53回", "ななお", "リアクション", "偽の生放送"], ["54回", "ななお", "ふつおた", "1周年"], ["54回", "ななお", "ハガキ", "けれけれすごろく"], ["55回", "ななお", "ラジオ猫", "ハリソン山中"], ["55回", "ななお", "ラジオ猫", "秋田犬"], ["58回", "ななお", "ラジオ猫", "アレクサ"]];
+
+if(!mails.length){
+  mails=completeKerereRows.map(([episode,name,corner,body])=>({
+    id:uid(),program:"けれけれ",episode,airDate:"",name,corner,body,summary:body,url:"",memo:"",favorite:false,status:"adopted"
+  }));
+}else{
+  const existing=new Set(mails.filter(x=>x.program==="けれけれ").map(x=>[x.episode,x.name,x.corner,x.summary||x.body].join("||")));
+  for(const [episode,name,corner,body] of completeKerereRows){
+    const key=[episode,name,corner,body].join("||");
+    if(!existing.has(key)){
+      mails.push({id:uid(),program:"けれけれ",episode,airDate:"",name,corner,body,summary:body,url:"",memo:"",favorite:false,status:"adopted"});
+    }
+  }
 }
 mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:(x.name==="ガンバレななお"||x.name==="ガンバレな")?"ガンバレないわ":x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",favorite:!!x.favorite,status:x.status||"adopted"}));
 localStorage.setItem(KEY,JSON.stringify(mails));
@@ -48,3 +56,17 @@ $("backupBtn").onclick=()=>{downloadBlob("radio-mail-backup-"+new Date().toISOSt
 $("restoreInput").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw 0;if(confirm(`${data.length}件のデータに置き換えます。よろしいですか？`)){mails=data.map(x=>({...x,id:x.id||uid(),episode:(x.episode||"").trim()||"不明",favorite:!!x.favorite,status:x.status||"adopted"}));save();toast("復元しました")}}catch{alert("復元できるJSONではありません。")}e.target.value=""};
 $("csvBtn").onclick=()=>{const cols=["状態","お気に入り","番組","放送回","放送日","ラジオネーム","コーナー","メール本文","要約","URL","メモ"];const rows=mails.map(x=>[x.status==="adopted"?"採用":"送信済み",x.favorite?"★":"",x.program,x.episode,x.airDate,x.name,x.corner,x.body,x.summary,x.url,x.memo]);const csv="\uFEFF"+[cols,...rows].map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\r\n");downloadBlob("radio-mail-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));toast("CSVを書き出しました")};
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("installBtn").hidden=false});$("installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$("installBtn").hidden=true};window.addEventListener("appinstalled",()=>$("installBtn").hidden=true);if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));render();
+
+const detailDeleteBtn=document.getElementById("detailDeleteBtn");
+if(detailDeleteBtn){
+  detailDeleteBtn.onclick=()=>{
+    const x=mails.find(m=>m.id===currentDetailId);
+    if(!x)return;
+    if(confirm("このメールを削除しますか？")){
+      mails=mails.filter(m=>m.id!==currentDetailId);
+      save();
+      document.getElementById("detailDialog").close();
+      toast("削除しました");
+    }
+  };
+}
