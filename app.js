@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.7";
+const APP_VERSION="ver.9";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -182,67 +182,97 @@ function openEditor(id=null){resetForm();editingId=id;if(id){const x=mails.find(
 $("addBtn").onclick=()=>{if(selectedView==="__draft__")openDraftComposer();else openEditor();};$("cancelBtn").onclick=()=>$("editDialog").close();$("closeDialog").onclick=()=>$("editDialog").close();
 $("deleteBtn").onclick=()=>{if(editingId&&confirm("このメールを削除しますか？")){mails=mails.filter(x=>x.id!==editingId);save();$("editDialog").close();toast("削除しました")}};
 $("mailForm").addEventListener("submit",e=>{e.preventDefault();const old=editingId?mails.find(m=>m.id===editingId):null;const status=old?.status||(selectedView==="__draft__"?"draft":selectedView==="__sent__"?"sent":"adopted");const x={id:editingId||uid(),program:$("program").value.trim()||"不明",episode:$("episode").value.trim()||"不明",airDate:$("airDate").value,name:$("name").value.trim(),corner:$("corner").value.trim(),body:$("body").value,summary:$("summary").value.trim(),url:$("url").value.trim(),memo:$("memo").value,favorite:old?.favorite||false,status,sentAt:(status==="sent"&&!old?.sentAt)?new Date().toISOString():(old?.sentAt||"")};if(editingId)mails=mails.map(m=>m.id===editingId?x:m);else mails.push(x);save();$("editDialog").close();toast(editingId?"更新しました":"追加しました")});
+function safeHttpUrl(url){
+  const v=String(url||"").trim();
+  if(!v)return "";
+  try{
+    const u=new URL(v);
+    return (u.protocol==="http:"||u.protocol==="https:")?u.href:"";
+  }catch{return "";}
+}
+function commitDetailField(el){
+  const m=mails.find(mm=>mm.id===currentDetailId);
+  if(!m)return;
+  const key=el.dataset.key;
+  let val=(el.tagName==="INPUT"||el.tagName==="TEXTAREA"?el.value:el.innerText).trim();
+  if(key==="episode"&&!val)val="不明";
+  m[key]=val;
+  if(key==="body"&&m.status==="draft")m.summary=val.slice(0,40);
+  localStorage.setItem(KEY,JSON.stringify(mails));
+  render();
+}
+function bindDetailEditors(){
+  $("detailContent").querySelectorAll("[data-key]").forEach(el=>{
+    if(el.dataset.manualSave==="true")return;
+    el.addEventListener("blur",()=>commitDetailField(el));
+    if(el.tagName==="INPUT")el.addEventListener("change",()=>commitDetailField(el));
+  });
+}
+function renderPodcastBlock(x,editing=false){
+  const wrap=document.getElementById("podcastBlock");
+  if(!wrap)return;
+  if(editing){
+    wrap.innerHTML=`<input class="detail-url-v1" data-key="url" data-manual-save="true" type="url" value="${esc(x.url||"")}" placeholder="URL未登録">`;
+    const input=wrap.querySelector("input");
+    input.focus();
+    input.setSelectionRange?.(input.value.length,input.value.length);
+    $("detailEditBtn").textContent="保存";
+  }else{
+    const href=safeHttpUrl(x.url);
+    wrap.innerHTML=href?`<a class="podcast-link" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(x.url)}</a>`:`<span class="podcast-empty">URL未登録</span>`;
+    $("detailEditBtn").textContent="編集";
+  }
+}
 function openDetail(id){
   currentDetailId=id;
   const x=mails.find(m=>m.id===id);
   if(!x)return;
+  const isDraft=x.status==="draft";
 
-  $("detailTitle").textContent=x.summary||x.corner||"メール詳細";
+  $("detailTitle").textContent=isDraft?"下書き詳細":(x.summary||x.corner||"メール詳細");
   $("favoriteBtn").textContent=x.favorite?"★":"☆";
   $("favoriteBtn").classList.toggle("active",x.favorite);
-  $("markAdoptedBtn").hidden=x.status==="adopted";
+  $("detailEditBtn").hidden=isDraft;
+  $("markAdoptedBtn").hidden=!isDraft;
+  $("markAdoptedBtn").textContent=isDraft?"送信済みに追加（全件タブに移動）":"採用メールに追加";
 
-  $("detailContent").innerHTML=`
-    <div class="detail-grid">
-      <div class="k">番組</div><div class="detail-gray editable-inline" data-key="program" contenteditable="true">${esc(x.program)}</div>
-      <div class="k">放送回</div><div class="detail-gray editable-inline" data-key="episode" contenteditable="true">${esc(x.episode||"不明")}</div>
-      <div class="k">放送日</div><div class="detail-gray"><input class="detail-date-edit" data-key="airDate" type="date" value="${esc(x.airDate||"")}"></div>
-      <div class="k">ラジオネーム</div><div class="detail-gray editable-inline" data-key="name" contenteditable="true">${esc(x.name||"")}</div>
-      <div class="k">コーナー</div><div class="detail-gray editable-inline" data-key="corner" contenteditable="true">${esc(x.corner||"")}</div>
-      <div class="k">状態</div><div class="status-cell">${x.status==="adopted"?"採用":x.status==="draft"?"下書き":"送信済み"}${x.sentAt?`<span class="sent-at">送信 ${new Date(x.sentAt).toLocaleString("ja-JP")}</span>`:""}</div>
-    </div>
-
-    <div class="detail-body detail-gray editable-block-v1" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div>
-
-    ${x.summary?`<div class="detail-body"><strong>要約</strong><br><div class="detail-gray editable-block-v1" data-key="summary" contenteditable="true">${esc(x.summary)}</div></div>`:""}
-
-    <div class="detail-body"><strong>Podcast URL</strong><br><input class="detail-url-v1" data-key="url" value="${esc(x.url||"")}" placeholder="URL未登録"></div>
-
-    ${x.memo?`<div class="detail-body"><strong>メモ</strong><br><div class="detail-gray editable-block-v1" data-key="memo" contenteditable="true">${esc(x.memo)}</div></div>`:""}
-    ${x.status==="draft"?`<div class="detail-body status-action-wrap"><button id="sendDraftBtn" class="primary">送信済みにする</button></div>`:""}
-  `;
-
-  $("detailContent").querySelectorAll("[data-key]").forEach(el=>{
-    const commit=()=>{
-      const m=mails.find(mm=>mm.id===currentDetailId);
-      if(!m)return;
-      const key=el.dataset.key;
-      let val=(el.tagName==="INPUT"?el.value:el.innerText).trim();
-      if(key==="episode"&&!val)val="不明";
-      m[key]=val;
-      localStorage.setItem(KEY,JSON.stringify(mails));
-      render();
-    };
-    el.addEventListener("blur",commit);
-    if(el.tagName==="INPUT")el.addEventListener("change",commit);
-  });
-
-  $("detailDialog").showModal();
-  const sendDraftBtn=document.getElementById("sendDraftBtn");
-  if(sendDraftBtn){
-    sendDraftBtn.onclick=()=>{
-      const m=mails.find(mm=>mm.id===currentDetailId);
-      if(!m)return;
-      m.status="sent";
-      if(!m.sentAt)m.sentAt=new Date().toISOString();
-      save();
-      $("detailDialog").close();
-      toast("送信済みにしました");
-    };
+  if(isDraft){
+    $("detailContent").innerHTML=`
+      <div class="draft-detail-meta">
+        <label><span>ラジオネーム</span><input class="draft-detail-small" data-key="name" value="${esc(x.name||"")}" placeholder="ラジオネーム"></label>
+        <label><span>コーナー</span><input class="draft-detail-small" data-key="corner" value="${esc(x.corner||"")}" placeholder="コーナー"></label>
+      </div>
+      <div class="draft-detail-body-wrap">
+        <textarea class="draft-detail-body" data-key="body" placeholder="本文">${esc(x.body||"")}</textarea>
+      </div>`;
+    bindDetailEditors();
+  }else{
+    $("detailContent").innerHTML=`
+      <div class="detail-grid">
+        <div class="k">番組</div><div class="detail-gray editable-inline" data-key="program" contenteditable="true">${esc(x.program)}</div>
+        <div class="k">放送回</div><div class="detail-gray editable-inline" data-key="episode" contenteditable="true">${esc(x.episode||"不明")}</div>
+        <div class="k">放送日</div><div class="detail-gray"><input class="detail-date-edit" data-key="airDate" type="date" value="${esc(x.airDate||"")}"></div>
+        <div class="k">ラジオネーム</div><div class="detail-gray editable-inline" data-key="name" contenteditable="true">${esc(x.name||"")}</div>
+        <div class="k">コーナー</div><div class="detail-gray editable-inline" data-key="corner" contenteditable="true">${esc(x.corner||"")}</div>
+        <div class="k">状態</div><div class="status-cell">${x.status==="adopted"?"採用":"送信済み"}${x.sentAt?`<span class="sent-at">送信 ${new Date(x.sentAt).toLocaleString("ja-JP")}</span>`:""}</div>
+      </div>
+      <div class="detail-body detail-gray editable-block-v1" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div>
+      ${x.summary?`<div class="detail-body"><strong>要約</strong><br><div class="detail-gray editable-block-v1" data-key="summary" contenteditable="true">${esc(x.summary)}</div></div>`:""}
+      <div class="detail-body"><strong>Podcast URL</strong><br><div id="podcastBlock"></div></div>
+      ${x.memo?`<div class="detail-body"><strong>メモ</strong><br><div class="detail-gray editable-block-v1" data-key="memo" contenteditable="true">${esc(x.memo)}</div></div>`:""}`;
+    bindDetailEditors();
+    renderPodcastBlock(x,false);
   }
+  $("detailDialog").showModal();
 }
 $("favoriteBtn").onclick=()=>{const x=mails.find(m=>m.id===currentDetailId);if(!x)return;x.favorite=!x.favorite;save();$("favoriteBtn").textContent=x.favorite?"★":"☆";$("favoriteBtn").classList.toggle("active",x.favorite);toast(x.favorite?"お気に入りに追加":"お気に入りを解除")};
-$("markAdoptedBtn").onclick=()=>{const x=mails.find(m=>m.id===currentDetailId);if(!x)return;x.status="adopted";if(!x.sentAt)x.sentAt=new Date().toISOString();save();$("detailDialog").close();toast("採用メールに追加しました")};
+$("markAdoptedBtn").onclick=()=>{const x=mails.find(m=>m.id===currentDetailId);if(!x)return;if(x.status==="draft"){x.status="sent";if(!x.sentAt)x.sentAt=new Date().toISOString();save();$("detailDialog").close();toast("送信済みに追加しました");}else{x.status="adopted";if(!x.sentAt)x.sentAt=new Date().toISOString();save();$("detailDialog").close();toast("採用メールに追加しました")}};
+$("detailEditBtn").onclick=()=>{
+  const x=mails.find(m=>m.id===currentDetailId);if(!x||x.status==="draft")return;
+  const input=document.querySelector("#podcastBlock input[data-key='url']");
+  if(input){x.url=input.value.trim();localStorage.setItem(KEY,JSON.stringify(mails));renderPodcastBlock(x,false);render();toast("URLを保存しました");}
+  else renderPodcastBlock(x,true);
+};
 $("closeDetail").onclick=()=>$("detailDialog").close();$("closeDetail2").onclick=()=>$("detailDialog").close();$("moreBtn").onclick=e=>{e.stopPropagation();$("moreMenu").hidden=!$("moreMenu").hidden};document.addEventListener("click",e=>{if(!$("moreMenu").contains(e.target)&&e.target!==$("moreBtn"))$("moreMenu").hidden=true});
 function downloadBlob(name,blob){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $("backupBtn").onclick=()=>{downloadBlob("radio-mail-backup-"+new Date().toISOString().slice(0,10)+".json",new Blob([JSON.stringify(mails,null,2)],{type:"application/json"}));toast("バックアップを書き出しました")};$("restoreBtn").onclick=()=>$("restoreInput").click();
@@ -426,7 +456,7 @@ function closeDialogOnBackdrop(dialog){
     if(!inside)dialog.close();
   });
 }
-["detailDialog","editDialog","memoDialog"].forEach(id=>closeDialogOnBackdrop($(id)));
+["detailDialog","editDialog","memoDialog","quickComposerDialog"].forEach(id=>closeDialogOnBackdrop($(id)));
 
 
 
@@ -481,7 +511,7 @@ function renderDrafts(){
 }
 $("draftTimeline").addEventListener("click",e=>{
   const card=e.target.closest(".draft-card");
-  if(card)openDraftComposer(card.dataset.id);
+  if(card)openDetail(card.dataset.id);
 });
 
 let composerMode="memo";
