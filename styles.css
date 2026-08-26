@@ -647,3 +647,76 @@ main{
   color:#888;
   font-size:11px;
 }
+
+
+/* ===== ver.6 ===== */
+
+/* Restore summary area and reduce excessive blank space above tabs */
+.topbar{min-height:64px}
+.program-tabs{
+  margin-top:0!important;
+  padding-top:8px!important;
+  padding-bottom:8px!important;
+}
+.summary{
+  display:flex!important;
+  min-height:88px!important;
+  padding:12px 14px!important;
+  gap:18px!important;
+}
+.summary strong{font-size:22px!important}
+.summary span{font-size:11px!important}
+.summary-icon-btn{
+  margin-left:0;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid #ccc;
+  background:#fff;
+  font-size:18px;
+}
+.summary .primary{margin-left:auto!important}
+
+/* Filters are closed by default and only open via search button */
+.filters{
+  max-height:140px!important;
+  opacity:1!important;
+  overflow:hidden!important;
+  padding:6px 10px!important;
+  border-bottom:1px solid #ddd!important;
+  transition:max-height .16s ease,opacity .16s ease,padding .16s ease!important;
+}
+.filters.collapsed{
+  max-height:0!important;
+  opacity:0!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  border-bottom:0!important;
+}
+
+/* Draft tab */
+.draft-tab.active{
+  background:var(--accent)!important;
+  border-color:var(--accent)!important;
+  color:#fff!important;
+}
+.status-cell{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.sent-at{
+  display:block;
+  color:#888;
+  font-size:10px;
+}
+.status-action-wrap{
+  display:flex;
+  justify-content:flex-end;
+}
+
+/* keep details exactly in current good layout */
+#detailDialog{
+  width:min(90vw,500px)!important;
+  max-height:82vh!important;
+}
