@@ -154,3 +154,26 @@ dialog{border:0;border-radius:14px;padding:0;width:min(96vw,640px);max-height:92
 #detailDialog .detail-actions{
   gap:6px;
 }
+
+
+/* ===== ver.1 definitive fixes ===== */
+.version-label{font-size:11px;font-weight:600;color:#777;margin-left:6px;vertical-align:middle}
+
+.filters{position:relative!important;top:auto!important;padding:6px 10px!important}
+.filters input{height:34px!important;padding:6px 9px!important;font-size:12px!important}
+.filter-row{display:flex!important;align-items:center!important;gap:5px!important;margin-top:5px!important;overflow:visible!important}
+.filter-row select{flex:1 1 0!important;width:0!important;min-width:0!important;max-width:none!important;height:31px!important;padding:4px 5px!important;font-size:10.5px!important}
+.favorite-filter{flex:0 0 auto;height:31px;padding:4px 7px;border:1px solid #ccc;border-radius:8px;background:#fff;font-size:10.5px;white-space:nowrap}
+.favorite-filter.active{border-color:#d49b00;background:#fff9df;color:#8a6700;font-weight:700}
+
+/* The table body scrolls inside its own area. The header is always row zero. */
+.table-wrap{width:100%!important;height:calc(100vh - 305px)!important;min-height:300px;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch}
+.table-wrap table{width:100%!important;table-layout:fixed!important;border-collapse:separate!important;border-spacing:0!important}
+.table-wrap thead{position:static!important}
+.table-wrap thead th,.table-wrap th{position:sticky!important;top:0!important;z-index:12!important;background:#f7f7f7!important;box-shadow:0 1px 0 #d5d5d5}
+.table-wrap th:nth-child(1),.table-wrap td:nth-child(1){width:16%!important}
+.table-wrap th:nth-child(2),.table-wrap td:nth-child(2){width:24%!important}
+.table-wrap th:nth-child(3),.table-wrap td:nth-child(3){width:25%!important}
+.table-wrap th:nth-child(4),.table-wrap td:nth-child(4){width:35%!important}
+
+.adopted-tab.active{background:#4b9f5b;border-color:#4b9f5b;color:#fff}
