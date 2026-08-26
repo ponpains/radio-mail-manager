@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver6">
+  <link rel="stylesheet" href="styles.css?v=ver7">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.6</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.7</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -21,6 +21,8 @@
     <button id="restoreBtn">復元</button>
     <button id="csvBtn">CSV書出</button>
     <button id="themeBtn">テーマカラー</button>
+    <button id="statsBtn">記録</button>
+    <button id="programSettingsBtn">番組設定</button>
     <input id="restoreInput" type="file" accept=".json,application/json" hidden>
   </div>
 </header>
@@ -32,9 +34,9 @@
 
 <main>
   <section class="program-tabs" id="programTabs"></section>
-  <section class="summary">
-    <div><strong id="count">0</strong><span>採用</span></div>
-    <div><strong id="showCount">0</strong><span>表示中</span></div>
+  <section class="summary" id="summaryBar">
+    <div class="summary-stat"><strong id="count">0</strong><span id="countLabel">採用</span></div>
+    <div class="summary-stat"><strong id="showCount">0</strong><span>表示中</span></div>
     <button id="addBtn" class="primary">＋ 追加</button>
     <button id="filterToggleBtn" class="summary-icon-btn" type="button" aria-expanded="false" aria-label="検索・絞り込み">🔍</button>
   </section>
@@ -59,6 +61,7 @@
     </table>
   </section>
 
+<section id="draftView" class="draft-view" hidden><div id="draftTimeline" class="draft-timeline"></div></section>
 <section id="memoView" class="memo-view" hidden>
   <div id="memoTimeline" class="memo-timeline"></div>
 </section>
@@ -110,6 +113,31 @@
 </dialog>
 
 
+<dialog id="programSettingsDialog" class="compact-dialog">
+  <div class="dialog-head">
+    <h2>番組設定</h2>
+    <button type="button" id="closeProgramSettingsDialog" class="close">×</button>
+  </div>
+  <div class="program-settings-body">
+    <label>番組<select id="programSettingsSelect"></select></label>
+    <label>投稿フォームURL<input id="programFormUrl" type="url" placeholder="https://..."></label>
+    <label>メールアドレス<input id="programEmail" type="email" placeholder="example@example.com"></label>
+    <label>放送曜日<input id="programWeekday" placeholder="例：毎週火曜"></label>
+    <div class="program-settings-actions">
+      <button type="button" id="openProgramPostBtn" class="secondary">投稿先を開く</button>
+      <button type="button" id="saveProgramSettingsBtn" class="primary">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="statsDialog" class="compact-dialog">
+  <div class="dialog-head">
+    <h2>記録</h2>
+    <button type="button" id="closeStatsDialog" class="close">×</button>
+  </div>
+  <div id="statsContent" class="stats-content"></div>
+</dialog>
+
 <dialog id="themeDialog" class="compact-dialog">
   <div class="dialog-head">
     <h2>テーマカラー</h2>
@@ -158,7 +186,20 @@
   </div>
 </dialog>
 
+<dialog id="quickComposerDialog" class="composer-dialog">
+  <div class="composer-head">
+    <button type="button" id="closeComposerDialog" class="composer-close">×</button>
+    <strong id="composerTitle">メモ</strong>
+    <button type="button" id="composerSaveBtn" class="composer-save">保存</button>
+  </div>
+  <div id="draftFields" class="draft-fields" hidden>
+    <input id="draftName" list="nameList" placeholder="ラジオネーム">
+    <input id="draftCorner" list="cornerList" placeholder="コーナー">
+  </div>
+  <textarea id="composerText" maxlength="1000" placeholder="いま何を考えてる？"></textarea>
+  <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
+</dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver6"></script>
+<script src="app.js?v=ver7"></script>
 </body>
 </html>
