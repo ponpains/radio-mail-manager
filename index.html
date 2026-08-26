@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver10">
+  <link rel="stylesheet" href="styles.css?v=ver11">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.10</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.11</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -29,21 +29,29 @@
 <div id="programMenu" class="context-menu" hidden>
   <button id="renameProgramBtn">名前の変更</button>
   <button id="deleteProgramBtn" class="danger-menu">削除</button>
+  <button id="reorderProgramBtn">入れ替え</button>
 </div>
 <div id="memoMenu" class="context-menu memo-menu" hidden>
   <button id="editMemoMenuBtn">メモを編集</button>
   <button id="deleteMemoMenuBtn" class="danger-menu">メモを削除</button>
   <button id="copyMemoMenuBtn">コピー</button>
+  <button id="memoToDraftMenuBtn">下書きにする</button>
 </div>
-
+<div id="draftMenu" class="context-menu draft-menu" hidden>
+  <button id="editDraftMenuBtn">下書きを編集</button>
+  <button id="deleteDraftMenuBtn" class="danger-menu">下書きを削除</button>
+  <button id="duplicateDraftMenuBtn">下書きを複製</button>
+  <button id="copyDraftMenuBtn">コピー</button>
+  <button id="sendDraftMenuBtn">送信済みに追加</button>
+</div>
 
 <main>
   <section class="program-tabs" id="programTabs"></section>
   <section class="summary" id="summaryBar">
     <div class="summary-stat"><strong id="count">0</strong><span id="countLabel">採用</span></div>
     <div class="summary-stat"><strong id="showCount">0</strong><span>表示中</span></div>
-    <button id="filterToggleBtn" class="summary-icon-btn" type="button" aria-expanded="false" aria-label="検索・絞り込み">🔍</button>
     <button id="programPostBtn" class="summary-icon-btn program-post-btn" type="button" aria-label="番組へメール・投稿">✉</button>
+    <button id="filterToggleBtn" class="summary-icon-btn" type="button" aria-expanded="false" aria-label="検索・絞り込み">🔍</button>
     <button id="addBtn" class="primary">＋ 追加</button>
   </section>
   <section class="filters collapsed">
@@ -106,6 +114,7 @@
   <div class="dialog-head">
     <h2 id="detailTitle">メール詳細</h2>
     <span id="detailCount" class="detail-count" hidden></span>
+    <span id="detailAddedAt" class="detail-added-at" hidden></span>
     <button type="button" id="favoriteBtn" class="favorite-btn" aria-label="お気に入り">☆</button>
     <button type="button" id="closeDetail" class="close">×</button>
   </div>
@@ -180,6 +189,7 @@
 <dialog id="memoDialog">
   <div class="dialog-head">
     <h2 id="memoDialogTitle">メモ</h2>
+    <span id="memoDetailCount" class="detail-count" hidden></span>
     <button type="button" id="closeMemoDialog" class="close">×</button>
   </div>
   <div class="memo-dialog-body">
@@ -187,7 +197,7 @@
     <div class="memo-dialog-meta"><span id="memoDialogCount">0 / 500</span><span id="memoDialogDate"></span></div>
   </div>
   <div class="detail-actions">
-    <button id="memoToDraftBtn" class="secondary" hidden>下書きにする</button>
+    <button id="memoToDraftBtn" class="secondary" hidden>下書きにコピー</button>
     <button id="memoDeleteBtn" class="danger" hidden>削除</button>
     <button id="memoCancelBtn" class="secondary">閉じる</button>
     <button id="memoSaveBtn" class="primary">保存</button>
@@ -198,6 +208,7 @@
   <div class="composer-head">
     <button type="button" id="closeComposerDialog" class="composer-close">×</button>
     <strong id="composerTitle">メモ</strong>
+    <span id="composerTopCount" class="composer-top-count" hidden>0文字</span>
     <button type="button" id="composerSaveBtn" class="composer-save">保存</button>
   </div>
   <div id="draftFields" class="draft-fields" hidden>
@@ -208,6 +219,6 @@
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver10"></script>
+<script src="app.js?v=ver11"></script>
 </body>
 </html>

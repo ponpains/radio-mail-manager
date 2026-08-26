@@ -983,3 +983,35 @@ main{
 .table-wrap table.five-col th:nth-child(3),.table-wrap table.five-col td:nth-child(3){width:21%!important;}
 .table-wrap table.five-col th:nth-child(4),.table-wrap table.five-col td:nth-child(4){width:21%!important;}
 .table-wrap table.five-col th:nth-child(5),.table-wrap table.five-col td:nth-child(5){width:27%!important;}
+
+
+/* ===== ver.11 ===== */
+/* Summary actions: program mail -> search -> add, grouped at right. */
+#summaryBar .program-post-btn{margin-left:auto!important;}
+#summaryBar #filterToggleBtn{margin-left:0!important;}
+#summaryBar #addBtn{margin-left:0!important;}
+
+/* Draft cards use the same overflow interaction as memos. */
+.draft-card{position:relative!important;padding:10px 42px 10px 14px!important;}
+.draft-options-btn{position:absolute;top:5px;right:8px;width:30px;height:30px;border:0;background:transparent;border-radius:50%;font-size:21px;line-height:1;color:#666;padding:0;}
+.draft-options-btn:active{background:#eee;}
+.draft-menu{min-width:190px!important;z-index:60!important;}
+
+/* Draft composer realtime count in the top center. */
+#quickComposerDialog .composer-head{position:relative;}
+.composer-top-count{position:absolute;left:50%;transform:translateX(-50%);font-size:11px;color:#777;white-space:nowrap;pointer-events:none;}
+
+/* Sent/adopted record timestamp sits before the favorite star. */
+.detail-added-at{font-size:10px;color:#777;white-space:nowrap;margin-left:auto;}
+#detailDialog .dialog-head h2{flex:1 1 auto!important;}
+
+/* Memo edit/detail is deliberately simple and mirrors draft detail. */
+#memoDialog .memo-dialog-body{padding:12px 14px!important;}
+#memoDialogInput{width:100%!important;min-height:220px!important;border:1px solid #ddd!important;border-radius:9px!important;background:#f5f5f5!important;padding:10px!important;font:inherit!important;font-size:15px!important;line-height:1.55!important;resize:vertical!important;}
+#memoDialogInput:focus{outline:2px solid var(--accent);background:#fff!important;}
+#memoDialog .memo-dialog-meta{font-size:10px!important;}
+
+/* Program reorder mode. Long-press a program tab, then drag across program tabs. */
+.program-tabs.reorder-mode{outline:2px dashed var(--accent);outline-offset:-3px;background:var(--accent-soft)!important;}
+.program-tabs.reorder-mode .program-tab:not([data-view^="__"]){cursor:grab;touch-action:none;}
+.program-tabs.reorder-mode .program-tab.dragging{opacity:.6;transform:scale(1.05);cursor:grabbing;}
