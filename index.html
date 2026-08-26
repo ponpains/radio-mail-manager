@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver1">
+  <link rel="stylesheet" href="styles.css?v=ver2">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.1</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.2</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -36,6 +36,11 @@
     <div class="filter-row">
       <select id="nameFilter"><option value="">ラジオネーム：すべて</option></select>
       <select id="cornerFilter"><option value="">コーナー：すべて</option></select>
+      <div class="period-filter">
+        <input id="fromDateFilter" type="date" aria-label="開始日">
+        <span>〜</span>
+        <input id="toDateFilter" type="date" aria-label="終了日">
+      </div>
       <button id="favoriteFilterBtn" class="favorite-filter" type="button" aria-pressed="false">☆ お気に入り</button>
     </div>
   </section>
@@ -85,11 +90,11 @@
   <div class="detail-actions">
     <button id="detailDeleteBtn" class="danger">削除</button>
     <button id="markAdoptedBtn" class="primary" hidden>採用メールに追加</button>
-    <button id="editFromDetail" class="secondary">編集</button>
+    
     <button id="closeDetail2" class="primary">閉じる</button>
   </div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver1"></script>
+<script src="app.js?v=ver2"></script>
 </body>
 </html>

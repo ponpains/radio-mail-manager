@@ -177,3 +177,36 @@ dialog{border:0;border-radius:14px;padding:0;width:min(96vw,640px);max-height:92
 .table-wrap th:nth-child(4),.table-wrap td:nth-child(4){width:35%!important}
 
 .adopted-tab.active{background:#4b9f5b;border-color:#4b9f5b;color:#fff}
+
+
+/* ===== ver.2 ===== */
+html,body{height:100%}
+body{min-height:100dvh}
+main{min-height:calc(100dvh - 64px);display:flex;flex-direction:column}
+.table-wrap{flex:1 1 auto!important;height:auto!important;min-height:0!important;max-height:none!important}
+.table-wrap table{min-height:100%}
+
+/* compact period filter */
+.period-filter{display:flex;align-items:center;gap:3px;flex:0 1 160px}
+.period-filter input{width:72px!important;height:31px!important;padding:2px 3px!important;font-size:9.5px!important}
+.period-filter span{font-size:10px;color:#777}
+
+/* filters hide while scrolling */
+.filters{transition:transform .18s ease,opacity .18s ease,max-height .18s ease,padding .18s ease}
+.filters.filters-hidden{transform:translateY(-12px);opacity:0;max-height:0;overflow:hidden;padding-top:0!important;padding-bottom:0!important;border-bottom:0}
+
+/* inline detail editing */
+.editable-field,.editable-block,.detail-input,.detail-url-input{
+  background:#f3f3f3;
+  border:1px solid #e1e1e1;
+  border-radius:6px;
+  padding:5px 6px;
+  min-height:30px;
+  width:100%;
+  font:inherit;
+}
+.editable-block{white-space:pre-wrap;line-height:1.5}
+.editable-field:focus,.editable-block:focus,.detail-input:focus,.detail-url-input:focus{
+  outline:2px solid #9ccca5;
+  background:#fff;
+}
