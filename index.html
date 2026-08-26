@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
@@ -36,6 +36,7 @@
     <div class="filter-row">
       <select id="nameFilter"><option value="">ラジオネーム：すべて</option></select>
       <select id="cornerFilter"><option value="">コーナー：すべて</option></select>
+      <button id="favoriteFilterBtn" class="favorite-filter" type="button" aria-pressed="false">☆ お気に入り</button>
     </div>
   </section>
   <section class="table-wrap">
@@ -66,7 +67,7 @@
       <label class="wide">メモ<textarea id="memo" rows="2" placeholder="メモ"></textarea></label>
     </div>
     <div class="form-actions sticky-actions">
-      <button type="button" id="deleteBtn" class="danger" hidden>削除</button><span></span>
+<span></span>
       <button type="button" id="cancelBtn" class="secondary">キャンセル</button><button type="submit" class="primary">保存</button>
     </div>
   </form>
@@ -81,13 +82,12 @@
   <div id="detailContent"></div>
   <div class="detail-actions">
     <button id="detailDeleteBtn" class="danger">削除</button>
-    <button id="deleteFromDetailBtn" class="danger">削除</button>
-    <button id="markAdoptedBtn" class="primary" hidden>採用メールに追加</button>
+<button id="markAdoptedBtn" class="primary" hidden>採用メールに追加</button>
     <button id="editFromDetail" class="secondary">編集</button>
     <button id="closeDetail2" class="primary">閉じる</button>
   </div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

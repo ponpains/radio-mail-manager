@@ -100,3 +100,57 @@ dialog{border:0;border-radius:14px;padding:0;width:min(96vw,640px);max-height:92
   padding:7px 10px;
   font-size:12px;
 }
+
+
+/* v7: fix list header position and favorites filter */
+.filters{
+  position:relative;
+  top:auto;
+  z-index:7;
+  background:#fff;
+}
+
+/* Header should sit directly above the first data row, not float in the middle */
+.table-wrap{
+  overflow-x:hidden;
+}
+.table-wrap thead th{
+  position:sticky;
+  top:64px;
+  z-index:7;
+  background:#f7f7f7;
+  box-shadow:0 1px 0 #d5d5d5;
+}
+
+/* When browser renders the sticky header inside the table, preserve row height */
+.table-wrap thead{
+  position:relative;
+  z-index:7;
+}
+
+.filter-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap;
+}
+.favorite-filter{
+  flex:0 0 auto;
+  height:31px;
+  padding:5px 8px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  background:#fff;
+  font-size:11px;
+  white-space:nowrap;
+}
+.favorite-filter.active{
+  border-color:#d49b00;
+  background:#fff9df;
+  color:#8a6700;
+  font-weight:700;
+}
+
+/* Slightly tighten the detail actions; one delete button only */
+#detailDialog .detail-actions{
+  gap:6px;
+}

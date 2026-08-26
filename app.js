@@ -5,6 +5,7 @@ if(!raw){for(const k of OLD_KEYS){if(localStorage.getItem(k)){raw=localStorage.g
 let mails=raw?JSON.parse(raw):[];
 let selectedView=localStorage.getItem("radioMailManager.selectedView")||"けれけれ";
 let editingId=null,currentDetailId=null,deferredPrompt=null;
+let favoriteOnly=false;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -38,6 +39,13 @@ function render(){renderProgramTabs();refreshFilters();const rows=filtered();con
 function fitAllText(){document.querySelectorAll(".fit-text").forEach(el=>{el.style.transform="scaleX(1)";el.style.width="100%";const cell=el.parentElement,avail=cell.clientWidth-4,need=el.scrollWidth;if(need>avail&&need>0){const scale=Math.max(.55,avail/need);el.style.transform=`scaleX(${scale})`;el.style.width=`${100/scale}%`}})}
 window.addEventListener("resize",()=>requestAnimationFrame(fitAllText));
 $("mailTable").addEventListener("click",e=>{const tr=e.target.closest("tr");if(tr)openDetail(tr.dataset.id)});["search","nameFilter","cornerFilter"].forEach(id=>$(id).addEventListener("input",render));
+$("favoriteFilterBtn").onclick=()=>{
+  favoriteOnly=!favoriteOnly;
+  $("favoriteFilterBtn").classList.toggle("active",favoriteOnly);
+  $("favoriteFilterBtn").setAttribute("aria-pressed",String(favoriteOnly));
+  $("favoriteFilterBtn").textContent=favoriteOnly?"★ お気に入り":"☆ お気に入り";
+  render();
+};
 function uniqueValues(key){return [...new Set(mails.map(x=>x[key]).filter(Boolean))].sort()}
 function fillDatalists(){$("programList").innerHTML=uniqueValues("program").map(v=>`<option value="${esc(v)}"></option>`).join("");$("nameList").innerHTML=uniqueValues("name").map(v=>`<option value="${esc(v)}"></option>`).join("");$("cornerList").innerHTML=uniqueValues("corner").map(v=>`<option value="${esc(v)}"></option>`).join("")}
 function resetForm(){editingId=null;$("dialogTitle").textContent=selectedView==="__sent__"?"送信済みメールを追加":"採用メールを追加";$("deleteBtn").hidden=true;$("mailForm").reset();fillDatalists();if(selectedView!=="__sent__")$("program").value=selectedView}
@@ -59,9 +67,11 @@ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPro
 
 
 
-const detailDeleteBtnV6=document.getElementById("detailDeleteBtn");
-if(detailDeleteBtnV6){
-  detailDeleteBtnV6.onclick=()=>{
+
+
+const detailDeleteBtnV7=document.getElementById("detailDeleteBtn");
+if(detailDeleteBtnV7){
+  detailDeleteBtnV7.onclick=()=>{
     if(!currentDetailId)return;
     if(confirm("このメールを削除しますか？")){
       mails=mails.filter(m=>m.id!==currentDetailId);
