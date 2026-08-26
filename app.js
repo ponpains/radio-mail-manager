@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.9";
+const APP_VERSION="ver.10";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -34,7 +34,15 @@ if(!mails.length){
     }
   }
 }
-mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:(x.name==="ガンバレななお"||x.name==="ガンバレな")?"ガンバレないわ":x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||""}));
+function createdAtFromId(id){
+  const raw=String(id||"");
+  if(raw.length<=6)return "";
+  const ms=parseInt(raw.slice(0,-6),36);
+  if(!Number.isFinite(ms)||ms<946684800000)return "";
+  const d=new Date(ms);
+  return Number.isNaN(d.getTime())?"":d.toISOString();
+}
+mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:(x.name==="ガンバレななお"||x.name==="ガンバレな")?"ガンバレないわ":x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||"",createdAt:x.createdAt||createdAtFromId(x.id)||x.sentAt||""}));
 localStorage.setItem(KEY,JSON.stringify(mails));
 function adoptedPrograms(){return [...new Set(mails.filter(x=>x.status==="adopted").map(x=>x.program).filter(Boolean))]}
 function viewOrder(){return ["__memo__","__draft__","__sent__","__adopted__",...adoptedPrograms()]}
@@ -108,9 +116,8 @@ $("deleteProgramBtn").onclick=()=>{
 };
 
 document.addEventListener("click",e=>{
-  if(!$("programMenu").hidden && !$("programMenu").contains(e.target)){
-    $("programMenu").hidden=true;
-  }
+  if(!$("programMenu").hidden && !$("programMenu").contains(e.target))$("programMenu").hidden=true;
+  if(!$("memoMenu").hidden && !$("memoMenu").contains(e.target) && !e.target.closest(".memo-options-btn"))$("memoMenu").hidden=true;
 });
 
 
@@ -142,6 +149,7 @@ function render(){
   document.querySelector(".filters").hidden=isSpecial;
   document.querySelector(".table-wrap").hidden=isSpecial;
   $("fabAddBtn").hidden=false;
+  $("programPostBtn").hidden=true;
 
   if(isMemo){renderMemos();return;}
   if(isDraft){renderDrafts();return;}
@@ -155,8 +163,19 @@ function render(){
   $("count").textContent=adoptedCount;
   $("countLabel").textContent="採用";
   $("showCount").textContent=rows.length;
+  const isProgramView=!String(selectedView).startsWith("__");
+  $("programPostBtn").hidden=!isProgramView;
+
+  const showProgramColumn=selectedView==="__sent__"||selectedView==="__adopted__";
+  const table=document.querySelector(".table-wrap table");
+  table.classList.toggle("five-col",showProgramColumn);
+  table.classList.toggle("four-col",!showProgramColumn);
+  table.querySelector("thead tr").innerHTML=showProgramColumn
+    ?`<th>番組名</th><th>放送回</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th>`
+    :`<th>放送回</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th>`;
 
   $("mailTable").innerHTML=rows.map(x=>`<tr data-id="${x.id}" class="${selectedView==="__sent__"&&x.status==="adopted"?"adopted-row":""}">
+    ${showProgramColumn?`<td><span class="fit-text">${esc(x.program)}</span></td>`:""}
     <td><span class="fit-text">${esc(x.episode)}</span></td>
     <td><span class="fit-text">${esc(x.name)}</span></td>
     <td><span class="fit-text">${esc(x.corner)}</span></td>
@@ -230,6 +249,8 @@ function openDetail(id){
   const isDraft=x.status==="draft";
 
   $("detailTitle").textContent=isDraft?"下書き詳細":(x.summary||x.corner||"メール詳細");
+  $("detailCount").hidden=!isDraft;
+  $("detailCount").textContent=isDraft?`${(x.body||"").length}文字`:"";
   $("favoriteBtn").textContent=x.favorite?"★":"☆";
   $("favoriteBtn").classList.toggle("active",x.favorite);
   $("detailEditBtn").hidden=isDraft;
@@ -246,6 +267,8 @@ function openDetail(id){
         <textarea class="draft-detail-body" data-key="body" placeholder="本文">${esc(x.body||"")}</textarea>
       </div>`;
     bindDetailEditors();
+    const draftBody=$("detailContent").querySelector(".draft-detail-body");
+    draftBody?.addEventListener("input",()=>{$("detailCount").textContent=`${draftBody.value.length}文字`;});
   }else{
     $("detailContent").innerHTML=`
       <div class="detail-grid">
@@ -276,7 +299,7 @@ $("detailEditBtn").onclick=()=>{
 $("closeDetail").onclick=()=>$("detailDialog").close();$("closeDetail2").onclick=()=>$("detailDialog").close();$("moreBtn").onclick=e=>{e.stopPropagation();$("moreMenu").hidden=!$("moreMenu").hidden};document.addEventListener("click",e=>{if(!$("moreMenu").contains(e.target)&&e.target!==$("moreBtn"))$("moreMenu").hidden=true});
 function downloadBlob(name,blob){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $("backupBtn").onclick=()=>{downloadBlob("radio-mail-backup-"+new Date().toISOString().slice(0,10)+".json",new Blob([JSON.stringify(mails,null,2)],{type:"application/json"}));toast("バックアップを書き出しました")};$("restoreBtn").onclick=()=>$("restoreInput").click();
-$("restoreInput").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw 0;if(confirm(`${data.length}件のデータに置き換えます。よろしいですか？`)){mails=data.map(x=>({...x,id:x.id||uid(),episode:(x.episode||"").trim()||"不明",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||""}));save();toast("復元しました")}}catch{alert("復元できるJSONではありません。")}e.target.value=""};
+$("restoreInput").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw 0;if(confirm(`${data.length}件のデータに置き換えます。よろしいですか？`)){mails=data.map(x=>{const id=x.id||uid();return {...x,id,episode:(x.episode||"").trim()||"不明",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||"",createdAt:x.createdAt||createdAtFromId(id)||x.sentAt||""};});save();toast("復元しました")}}catch{alert("復元できるJSONではありません。")}e.target.value=""};
 $("csvBtn").onclick=()=>{const cols=["状態","お気に入り","番組","放送回","放送日","ラジオネーム","コーナー","メール本文","要約","URL","メモ"];const rows=mails.map(x=>[x.status==="adopted"?"採用":"送信済み",x.favorite?"★":"",x.program,x.episode,x.airDate,x.name,x.corner,x.body,x.summary,x.url,x.memo]);const csv="\uFEFF"+[cols,...rows].map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\r\n");downloadBlob("radio-mail-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));toast("CSVを書き出しました")};
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;$("installBtn").hidden=false});$("installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$("installBtn").hidden=true};window.addEventListener("appinstalled",()=>$("installBtn").hidden=true);if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
@@ -369,6 +392,7 @@ function renderMemos(){
     .slice()
     .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
     .map(m=>`<article class="memo-card" data-id="${m.id}">
+      <button class="memo-options-btn" type="button" aria-label="メモのオプション">…</button>
       <div class="memo-text">${esc(m.text)}</div>
       <div class="memo-meta"><span>${formatMemoDate(m.createdAt)}</span><span>${m.text.length}文字</span></div>
     </article>`).join("");
@@ -412,7 +436,34 @@ $("memoDeleteBtn").onclick=()=>{
 };
 $("memoCancelBtn").onclick=()=>$("memoDialog").close();
 $("closeMemoDialog").onclick=()=>$("memoDialog").close();
-$("memoTimeline").addEventListener("click",e=>{const card=e.target.closest(".memo-card");if(card)openMemoComposer(card.dataset.id);});
+let memoMenuTargetId=null;
+$("memoTimeline").addEventListener("click",e=>{
+  const options=e.target.closest(".memo-options-btn");
+  const card=e.target.closest(".memo-card");
+  if(!card)return;
+  if(options){
+    e.stopPropagation();
+    memoMenuTargetId=card.dataset.id;
+    const menu=$("memoMenu");
+    const r=options.getBoundingClientRect();
+    menu.style.left=Math.max(8,Math.min(r.right-170,window.innerWidth-178))+"px";
+    menu.style.top=Math.min(r.bottom+6,window.innerHeight-150)+"px";
+    menu.hidden=false;
+    return;
+  }
+  openMemoComposer(card.dataset.id);
+});
+$("editMemoMenuBtn").onclick=()=>{const id=memoMenuTargetId;$("memoMenu").hidden=true;if(id)openMemoComposer(id);};
+$("deleteMemoMenuBtn").onclick=()=>{
+  const id=memoMenuTargetId;$("memoMenu").hidden=true;if(!id)return;
+  if(confirm("このメモを削除しますか？")){memoItems=memoItems.filter(x=>x.id!==id);localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));renderMemos();toast("削除しました");}
+};
+$("copyMemoMenuBtn").onclick=async()=>{
+  const m=memoItems.find(x=>x.id===memoMenuTargetId);$("memoMenu").hidden=true;if(!m)return;
+  try{await navigator.clipboard.writeText(m.text||"");}
+  catch{const ta=document.createElement("textarea");ta.value=m.text||"";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();}
+  toast("メモをコピーしました");
+};
 
 $("fabAddBtn").onclick=()=>{if(selectedView==="__memo__")openMemoComposer();else if(selectedView==="__draft__")openDraftComposer();else openEditor();};
 
@@ -456,7 +507,15 @@ function closeDialogOnBackdrop(dialog){
     if(!inside)dialog.close();
   });
 }
-["detailDialog","editDialog","memoDialog","quickComposerDialog"].forEach(id=>closeDialogOnBackdrop($(id)));
+function bindBackdropCloseToAllDialogs(root=document){
+  root.querySelectorAll?.("dialog").forEach(dialog=>{
+    if(dialog.dataset.backdropCloseBound)return;
+    dialog.dataset.backdropCloseBound="true";
+    closeDialogOnBackdrop(dialog);
+  });
+}
+bindBackdropCloseToAllDialogs();
+new MutationObserver(muts=>muts.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches?.("dialog"))bindBackdropCloseToAllDialogs(n.parentElement||document);else bindBackdropCloseToAllDialogs(n);}}))).observe(document.body,{childList:true,subtree:true});
 
 
 
@@ -467,7 +526,7 @@ $("memoToDraftBtn").onclick=()=>{
   mails.push({
     id:uid(),program:"不明",episode:"不明",airDate:"",name:"",corner:"",
     body:m.text,summary:m.text.slice(0,40),url:"",memo:"",
-    favorite:false,status:"draft",sentAt:""
+    favorite:false,status:"draft",sentAt:"",createdAt:new Date().toISOString()
   });
   localStorage.setItem(KEY,JSON.stringify(mails));
   selectedView="__draft__";
@@ -501,12 +560,20 @@ $("filterToggleBtn").onclick=()=>{
   filters.classList.toggle("collapsed");
   $("filterToggleBtn").setAttribute("aria-expanded",String(willOpen));
 };
+$("programPostBtn").onclick=()=>{
+  if(String(selectedView).startsWith("__"))return;
+  const s=programSettings[selectedView]||{};
+  const url=safeHttpUrl(s.formUrl);
+  if(url){window.open(url,"_blank","noopener,noreferrer");return;}
+  if(s.email){window.location.href=`mailto:${encodeURIComponent(s.email)}`;return;}
+  toast("番組設定に投稿先を登録してください");
+};
 
 function renderDrafts(){
-  const rows=mails.filter(x=>x.status==="draft").sort((a,b)=>String(b.id).localeCompare(String(a.id)));
+  const rows=mails.filter(x=>x.status==="draft").sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
   $("draftTimeline").innerHTML=rows.map(x=>`<article class="draft-card" data-id="${x.id}">
-    <div class="draft-meta"><strong>${esc(x.name||"ラジオネーム未設定")}</strong><span>${esc(x.corner||"コーナー未設定")}</span></div>
-    <div class="draft-body">${esc(x.body||"")}</div>
+    <div class="draft-body">${esc((x.body||"").replace(/\s+/g," ").trim()||"（本文なし）")}</div>
+    <div class="draft-meta"><span>${x.createdAt?formatMemoDate(x.createdAt):"日時不明"}</span><span>${(x.body||"").length}文字</span></div>
   </article>`).join("");
 }
 $("draftTimeline").addEventListener("click",e=>{
@@ -553,9 +620,9 @@ $("composerSaveBtn").onclick=()=>{
   }else{
     if(composerEditId){
       const d=mails.find(x=>x.id===composerEditId);
-      if(d){d.name=$("draftName").value.trim();d.corner=$("draftCorner").value.trim();d.body=text;d.summary=text.slice(0,40);}
+      if(d){d.name=$("draftName").value.trim();d.corner=$("draftCorner").value.trim();d.body=text;d.summary=text.slice(0,40);if(!d.createdAt)d.createdAt=new Date().toISOString();}
     }else{
-      mails.push({id:uid(),program:"不明",episode:"不明",airDate:"",name:$("draftName").value.trim(),corner:$("draftCorner").value.trim(),body:text,summary:text.slice(0,40),url:"",memo:"",favorite:false,status:"draft",sentAt:""});
+      mails.push({id:uid(),program:"不明",episode:"不明",airDate:"",name:$("draftName").value.trim(),corner:$("draftCorner").value.trim(),body:text,summary:text.slice(0,40),url:"",memo:"",favorite:false,status:"draft",sentAt:"",createdAt:new Date().toISOString()});
     }
     localStorage.setItem(KEY,JSON.stringify(mails));renderDrafts();
   }

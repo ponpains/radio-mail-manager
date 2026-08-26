@@ -950,3 +950,36 @@ main{
 #detailDialog .detail-actions{flex-wrap:wrap!important}
 #detailDialog .detail-actions button{flex:1 1 auto}
 #markAdoptedBtn{flex-basis:100%!important}
+
+/* ===== ver.10 ===== */
+/* Memo cards are denser and reserve room for the overflow menu. */
+.memo-card{position:relative!important;padding:10px 42px 10px 14px!important;}
+.memo-text{font-size:13px!important;line-height:1.35!important;}
+.memo-meta{margin-top:5px!important;font-size:10px!important;gap:10px!important;}
+.memo-options-btn{position:absolute;top:5px;right:8px;width:30px;height:30px;border:0;background:transparent;border-radius:50%;font-size:21px;line-height:1;color:#666;padding:0;}
+.memo-options-btn:active{background:#eee;}
+.memo-menu{min-width:170px!important;z-index:60!important;}
+
+/* Draft list: one-line body preview plus date and character count. */
+.draft-card{padding:10px 14px!important;}
+.draft-body{margin-top:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:13px!important;line-height:1.35!important;}
+.draft-meta{margin-top:5px!important;font-size:10px!important;gap:10px!important;color:#888!important;}
+
+/* Draft detail title + centered character counter. */
+#detailDialog .dialog-head{position:sticky!important;}
+.detail-count{position:absolute;left:50%;transform:translateX(-50%);font-size:11px;color:#777;white-space:nowrap;pointer-events:none;}
+
+/* Program quick-post button beside Search. */
+.program-post-btn{font-size:18px!important;}
+.program-post-btn[hidden]{display:none!important;}
+
+/* Dynamic table widths. Individual program tabs keep four columns. */
+.table-wrap table.four-col th:nth-child(1),.table-wrap table.four-col td:nth-child(1){width:16%!important;}
+.table-wrap table.four-col th:nth-child(2),.table-wrap table.four-col td:nth-child(2){width:24%!important;}
+.table-wrap table.four-col th:nth-child(3),.table-wrap table.four-col td:nth-child(3){width:25%!important;}
+.table-wrap table.four-col th:nth-child(4),.table-wrap table.four-col td:nth-child(4){width:35%!important;}
+.table-wrap table.five-col th:nth-child(1),.table-wrap table.five-col td:nth-child(1){width:18%!important;}
+.table-wrap table.five-col th:nth-child(2),.table-wrap table.five-col td:nth-child(2){width:13%!important;}
+.table-wrap table.five-col th:nth-child(3),.table-wrap table.five-col td:nth-child(3){width:21%!important;}
+.table-wrap table.five-col th:nth-child(4),.table-wrap table.five-col td:nth-child(4){width:21%!important;}
+.table-wrap table.five-col th:nth-child(5),.table-wrap table.five-col td:nth-child(5){width:27%!important;}

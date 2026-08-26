@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver9">
+  <link rel="stylesheet" href="styles.css?v=ver10">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.9</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.10</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -30,6 +30,11 @@
   <button id="renameProgramBtn">名前の変更</button>
   <button id="deleteProgramBtn" class="danger-menu">削除</button>
 </div>
+<div id="memoMenu" class="context-menu memo-menu" hidden>
+  <button id="editMemoMenuBtn">メモを編集</button>
+  <button id="deleteMemoMenuBtn" class="danger-menu">メモを削除</button>
+  <button id="copyMemoMenuBtn">コピー</button>
+</div>
 
 
 <main>
@@ -38,6 +43,7 @@
     <div class="summary-stat"><strong id="count">0</strong><span id="countLabel">採用</span></div>
     <div class="summary-stat"><strong id="showCount">0</strong><span>表示中</span></div>
     <button id="filterToggleBtn" class="summary-icon-btn" type="button" aria-expanded="false" aria-label="検索・絞り込み">🔍</button>
+    <button id="programPostBtn" class="summary-icon-btn program-post-btn" type="button" aria-label="番組へメール・投稿">✉</button>
     <button id="addBtn" class="primary">＋ 追加</button>
   </section>
   <section class="filters collapsed">
@@ -99,6 +105,7 @@
 <dialog id="detailDialog">
   <div class="dialog-head">
     <h2 id="detailTitle">メール詳細</h2>
+    <span id="detailCount" class="detail-count" hidden></span>
     <button type="button" id="favoriteBtn" class="favorite-btn" aria-label="お気に入り">☆</button>
     <button type="button" id="closeDetail" class="close">×</button>
   </div>
@@ -201,6 +208,6 @@
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver9"></script>
+<script src="app.js?v=ver10"></script>
 </body>
 </html>
