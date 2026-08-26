@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.4";
+const APP_VERSION="ver.5";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -135,7 +135,7 @@ function render(){
   document.querySelector(".summary").hidden=isMemo;
   document.querySelector(".filters").hidden=isMemo;
   document.querySelector(".table-wrap").hidden=isMemo;
-  $("fabAddBtn").hidden=isMemo;
+  $("fabAddBtn").hidden=false;
 
   if(isMemo){
     renderMemos();
@@ -305,30 +305,65 @@ function formatMemoDate(iso){
   const d=new Date(iso);
   return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 }
+
+
+
+
+
+let currentMemoId=null;
 function renderMemos(){
   $("memoTimeline").innerHTML=memoItems
     .slice()
     .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
     .map(m=>`<article class="memo-card" data-id="${m.id}">
       <div class="memo-text">${esc(m.text)}</div>
-      <div class="memo-date">${formatMemoDate(m.createdAt)}</div>
+      <div class="memo-meta"><span>${formatMemoDate(m.createdAt)}</span><span>${m.text.length}文字</span></div>
     </article>`).join("");
 }
-$("memoInput").addEventListener("input",()=>{
-  $("memoCharCount").textContent=`${$("memoInput").value.length} / 500`;
+function openMemoDialog(id=null){
+  currentMemoId=id;
+  const m=id?memoItems.find(x=>x.id===id):null;
+  $("memoDialogTitle").textContent=m?"メモ詳細":"メモを追加";
+  $("memoDialogInput").value=m?.text||"";
+  $("memoDialogCount").textContent=`${$("memoDialogInput").value.length} / 500`;
+  $("memoDialogDate").textContent=m?formatMemoDate(m.createdAt):"";
+  $("memoDeleteBtn").hidden=!m;
+  $("memoDialog").showModal();
+  setTimeout(()=>$("memoDialogInput").focus(),50);
+}
+$("memoDialogInput").addEventListener("input",()=>{
+  $("memoDialogCount").textContent=`${$("memoDialogInput").value.length} / 500`;
 });
-$("memoPostBtn").onclick=()=>{
-  const text=$("memoInput").value.trim();
+$("memoSaveBtn").onclick=()=>{
+  const text=$("memoDialogInput").value.trim();
   if(!text)return;
-  memoItems.push({id:uid(),text,createdAt:new Date().toISOString()});
+  if(currentMemoId){
+    const m=memoItems.find(x=>x.id===currentMemoId);
+    if(m)m.text=text;
+  }else{
+    memoItems.push({id:uid(),text,createdAt:new Date().toISOString()});
+  }
   localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
-  $("memoInput").value="";
-  $("memoCharCount").textContent="0 / 500";
+  $("memoDialog").close();
   renderMemos();
 };
+$("memoDeleteBtn").onclick=()=>{
+  if(!currentMemoId)return;
+  if(confirm("このメモを削除しますか？")){
+    memoItems=memoItems.filter(x=>x.id!==currentMemoId);
+    localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
+    $("memoDialog").close();
+    renderMemos();
+  }
+};
+$("memoCancelBtn").onclick=()=>$("memoDialog").close();
+$("closeMemoDialog").onclick=()=>$("memoDialog").close();
+$("memoTimeline").addEventListener("click",e=>{
+  const card=e.target.closest(".memo-card");
+  if(card)openMemoDialog(card.dataset.id);
+});
 
-
-$("fabAddBtn").onclick=()=>openEditor();
+$("fabAddBtn").onclick=()=>{if(selectedView==="__memo__")openMemoDialog();else openEditor();};
 
 
 const THEMES={
@@ -372,4 +407,15 @@ if(tableScrollArea){
     },300);
   },{passive:true});
 }
+
+
+
+function closeDialogOnBackdrop(dialog){
+  dialog.addEventListener("click",e=>{
+    const r=dialog.getBoundingClientRect();
+    const inside=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+    if(!inside)dialog.close();
+  });
+}
+["detailDialog","editDialog","memoDialog"].forEach(id=>closeDialogOnBackdrop($(id)));
 

@@ -531,3 +531,119 @@ main{
   background:#fff;
   font-size:13px;
 }
+
+
+/* ===== ver.5 ===== */
+
+/* Restore ver.3-style summary block size */
+.summary{
+  display:flex!important;
+  align-items:center!important;
+  gap:18px!important;
+  padding:12px 14px!important;
+  min-height:88px!important;
+  flex:0 0 auto!important;
+}
+.summary div{display:flex!important;flex-direction:column!important}
+.summary strong{font-size:22px!important;line-height:1.15!important}
+.summary span{font-size:11px!important;color:#777!important}
+.summary .primary{margin-left:auto!important}
+
+/* Move floating + to the right */
+.fab-add{
+  left:auto!important;
+  right:18px!important;
+  bottom:18px!important;
+}
+
+/* Add/edit dialog mirrors the detail dialog */
+#editDialog{
+  width:min(90vw,500px)!important;
+  max-height:82vh!important;
+}
+#editDialog .dialog-head{padding:9px 12px!important}
+#editDialog .dialog-head h2{font-size:16px!important}
+#editDialog .detail-grid{
+  grid-template-columns:68px 1fr!important;
+  gap:5px 8px!important;
+  padding:10px 12px!important;
+  font-size:12px!important;
+}
+#editDialog .detail-body{
+  margin:0 12px 8px!important;
+  padding:8px 9px!important;
+  line-height:1.55!important;
+  font-size:12px!important;
+}
+#editDialog .detail-gray input,
+#editDialog .detail-gray textarea,
+#editDialog .detail-body input,
+#editDialog .detail-body textarea{
+  width:100%;
+  border:0;
+  background:transparent;
+  padding:0;
+  font:inherit;
+  outline:none;
+  resize:vertical;
+}
+#editDialog .detail-actions{
+  gap:6px!important;
+  padding:8px 12px!important;
+}
+
+/* Memo timeline: no inline composer */
+.memo-view{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  background:#fff;
+}
+.memo-timeline{padding-bottom:90px}
+.memo-card{
+  padding:14px 16px;
+  border-bottom:1px solid #e5e5e5;
+  cursor:pointer;
+}
+.memo-text{
+  white-space:pre-wrap;
+  line-height:1.55;
+  font-size:15px;
+}
+.memo-meta{
+  margin-top:8px;
+  color:#888;
+  font-size:11px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+/* Memo detail/editor dialog */
+#memoDialog{
+  width:min(90vw,500px)!important;
+  max-height:82vh!important;
+}
+.memo-dialog-body{padding:12px}
+#memoDialogInput{
+  width:100%;
+  min-height:160px;
+  border:1px solid #e1e1e1;
+  border-radius:8px;
+  background:#f3f3f3;
+  padding:10px;
+  font:inherit;
+  line-height:1.55;
+  resize:vertical;
+}
+#memoDialogInput:focus{
+  outline:2px solid var(--accent);
+  background:#fff;
+}
+.memo-dialog-meta{
+  display:flex;
+  justify-content:space-between;
+  margin-top:7px;
+  color:#888;
+  font-size:11px;
+}

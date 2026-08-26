@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver4">
+  <link rel="stylesheet" href="styles.css?v=ver5">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.4</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.5</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -59,13 +59,6 @@
   </section>
 
 <section id="memoView" class="memo-view" hidden>
-  <div class="memo-compose">
-    <textarea id="memoInput" rows="3" maxlength="500" placeholder="メールのアイデアをメモ"></textarea>
-    <div class="memo-compose-footer">
-      <span id="memoCharCount">0 / 500</span>
-      <button id="memoPostBtn" class="primary">追加</button>
-    </div>
-  </div>
   <div id="memoTimeline" class="memo-timeline"></div>
 </section>
 
@@ -73,21 +66,26 @@
 
 <dialog id="editDialog">
   <form method="dialog" id="mailForm">
-    <div class="dialog-head"><h2 id="dialogTitle">メールを追加</h2><button type="button" id="closeDialog" class="close">×</button></div>
-    <div class="form-grid one-column">
-      <label>番組<input id="program" list="programList" placeholder="番組"><datalist id="programList"></datalist></label>
-      <label>放送回<input id="episode" placeholder="放送回"></label>
-      <label>放送日<input id="airDate" type="date"></label>
-      <label>ラジオネーム<input id="name" list="nameList" placeholder="ラジオネーム"><datalist id="nameList"></datalist></label>
-      <label>コーナー<input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist></label>
-      <label class="wide">メール本文<textarea id="body" rows="4" placeholder="メール本文"></textarea></label>
-      <label class="wide">要約<textarea id="summary" rows="2" placeholder="要約"></textarea></label>
-      <label class="wide">URL<input id="url" type="url" placeholder="https://..."></label>
-      <label class="wide">メモ<textarea id="memo" rows="2" placeholder="メモ"></textarea></label>
+    <div class="dialog-head">
+      <h2 id="dialogTitle">メールを追加</h2>
+      <button type="button" id="closeDialog" class="close">×</button>
     </div>
-    <div class="form-actions sticky-actions">
+
+    <div class="detail-grid add-detail-grid">
+      <div class="k">番組</div><div class="detail-gray"><input id="program" list="programList" placeholder="番組"><datalist id="programList"></datalist></div>
+      <div class="k">放送回</div><div class="detail-gray"><input id="episode" placeholder="放送回"></div>
+      <div class="k">放送日</div><div class="detail-gray"><input id="airDate" type="date"></div>
+      <div class="k">ラジオネーム</div><div class="detail-gray"><input id="name" list="nameList" placeholder="ラジオネーム"><datalist id="nameList"></datalist></div>
+      <div class="k">コーナー</div><div class="detail-gray"><input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist></div>
+    </div>
+
+    <div class="detail-body detail-gray"><strong>メール本文</strong><br><textarea id="body" rows="5" placeholder="メール本文"></textarea></div>
+    <div class="detail-body detail-gray"><strong>要約</strong><br><textarea id="summary" rows="2" placeholder="要約"></textarea></div>
+    <div class="detail-body detail-gray"><strong>URL</strong><br><input id="url" type="url" placeholder="https://..."></div>
+    <div class="detail-body detail-gray"><strong>メモ</strong><br><textarea id="memo" rows="2" placeholder="メモ"></textarea></div>
+
+    <div class="detail-actions">
       <button type="button" id="deleteBtn" class="danger" hidden>削除</button>
-      <span></span>
       <button type="button" id="cancelBtn" class="secondary">キャンセル</button>
       <button type="submit" class="primary">保存</button>
     </div>
@@ -140,7 +138,24 @@
 </dialog>
 
 <button id="fabAddBtn" class="fab-add" aria-label="メールを追加">＋</button>
+
+<dialog id="memoDialog">
+  <div class="dialog-head">
+    <h2 id="memoDialogTitle">メモ</h2>
+    <button type="button" id="closeMemoDialog" class="close">×</button>
+  </div>
+  <div class="memo-dialog-body">
+    <textarea id="memoDialogInput" maxlength="500" placeholder="メールのアイデアをメモ"></textarea>
+    <div class="memo-dialog-meta"><span id="memoDialogCount">0 / 500</span><span id="memoDialogDate"></span></div>
+  </div>
+  <div class="detail-actions">
+    <button id="memoDeleteBtn" class="danger" hidden>削除</button>
+    <button id="memoCancelBtn" class="secondary">閉じる</button>
+    <button id="memoSaveBtn" class="primary">保存</button>
+  </div>
+</dialog>
+
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver4"></script>
+<script src="app.js?v=ver5"></script>
 </body>
 </html>
