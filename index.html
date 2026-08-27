@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver11">
+  <link rel="stylesheet" href="styles.css?v=ver12">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.11</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.12</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -44,6 +44,14 @@
   <button id="copyDraftMenuBtn">コピー</button>
   <button id="sendDraftMenuBtn">送信済みに追加</button>
 </div>
+<div id="sortMenu" class="context-menu sort-menu" hidden>
+  <button data-sort="episodeAsc">放送回：昇順</button>
+  <button data-sort="episodeDesc">放送回：降順</button>
+  <button data-sort="addedDesc">追加日時：新しい順</button>
+  <button data-sort="addedAsc">追加日時：古い順</button>
+  <button data-sort="nameAsc">ラジオネーム順</button>
+  <button data-sort="cornerAsc">コーナー順</button>
+</div>
 
 <main>
   <section class="program-tabs" id="programTabs"></section>
@@ -51,12 +59,14 @@
     <div class="summary-stat"><strong id="count">0</strong><span id="countLabel">採用</span></div>
     <div class="summary-stat"><strong id="showCount">0</strong><span>表示中</span></div>
     <button id="programPostBtn" class="summary-icon-btn program-post-btn" type="button" aria-label="番組へメール・投稿">✉</button>
+    <button id="sortBtn" class="summary-icon-btn sort-btn" type="button" aria-expanded="false" aria-label="並べ替え">↕</button>
     <button id="filterToggleBtn" class="summary-icon-btn" type="button" aria-expanded="false" aria-label="検索・絞り込み">🔍</button>
     <button id="addBtn" class="primary">＋ 追加</button>
   </section>
   <section class="filters collapsed">
     <input id="search" type="search" placeholder="🔍 ラジオネーム・コーナー・本文を検索">
     <div class="filter-row">
+      <select id="programFilter" hidden><option value="">番組：すべて</option></select>
       <select id="nameFilter"><option value="">ラジオネーム：すべて</option></select>
       <select id="cornerFilter"><option value="">コーナー：すべて</option></select>
       <button id="periodFilterBtn" class="period-filter-btn" type="button">期間指定</button>
@@ -97,10 +107,10 @@
       <div class="k">コーナー</div><div class="detail-gray"><input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist></div>
     </div>
 
-    <div class="detail-body detail-gray"><strong>メール本文</strong><br><textarea id="body" rows="5" placeholder="メール本文"></textarea></div>
-    <div class="detail-body detail-gray"><strong>要約</strong><br><textarea id="summary" rows="2" placeholder="要約"></textarea></div>
+    <div class="detail-body detail-gray add-mail-body"><strong>メール本文</strong><br><textarea id="body" rows="8" placeholder="メール本文"></textarea></div>
+    <div class="detail-body detail-gray add-mail-summary"><strong>要約</strong><br><textarea id="summary" rows="1" placeholder="要約"></textarea></div>
     <div class="detail-body detail-gray"><strong>URL</strong><br><input id="url" type="url" placeholder="https://..."></div>
-    <div class="detail-body detail-gray"><strong>メモ</strong><br><textarea id="memo" rows="2" placeholder="メモ"></textarea></div>
+    <div class="detail-body detail-gray add-mail-memo"><strong>メモ</strong><br><textarea id="memo" rows="1" placeholder="メモ"></textarea></div>
 
     <div class="detail-actions">
       <button type="button" id="deleteBtn" class="danger" hidden>削除</button>
@@ -219,6 +229,6 @@
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver11"></script>
+<script src="app.js?v=ver12"></script>
 </body>
 </html>

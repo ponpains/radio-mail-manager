@@ -1015,3 +1015,74 @@ main{
 .program-tabs.reorder-mode{outline:2px dashed var(--accent);outline-offset:-3px;background:var(--accent-soft)!important;}
 .program-tabs.reorder-mode .program-tab:not([data-view^="__"]){cursor:grab;touch-action:none;}
 .program-tabs.reorder-mode .program-tab.dragging{opacity:.6;transform:scale(1.05);cursor:grabbing;}
+
+
+/* ===== ver.12 ===== */
+/* All add/detail input areas use a clean white background. */
+.detail-gray,
+#editDialog .detail-gray,
+#detailDialog .detail-gray,
+#memoDialogInput,
+.draft-detail-small,
+.draft-detail-body,
+#quickComposerDialog input,
+#quickComposerDialog textarea,
+.detail-date-edit,
+.detail-url-v1,
+.podcast-link{
+  background:#fff!important;
+}
+
+/* Add mail: prioritize the body; summary/memo stay deliberately very short.
+   ver.11 reference: summary/memo were 42px high. */
+#editDialog #body{
+  height:190px!important;
+  min-height:160px!important;
+  max-height:320px!important;
+  resize:vertical!important;
+}
+#editDialog #summary,
+#editDialog #memo{
+  height:28px!important;
+  min-height:28px!important;
+  max-height:56px!important;
+  line-height:1.25!important;
+  resize:vertical!important;
+}
+#editDialog .add-mail-summary,
+#editDialog .add-mail-memo{
+  padding-top:6px!important;
+  padding-bottom:6px!important;
+}
+
+/* Mail detail: episode/date share one line; radio name/corner share one line. */
+#detailDialog .mail-detail-grid{
+  grid-template-columns:68px 1fr!important;
+}
+.detail-pair-row{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.detail-pair-row label{font-size:10px!important;color:#777!important;font-weight:600!important;min-width:0;}
+.detail-pair-row label>span{display:block;margin:0 0 3px 2px;white-space:nowrap;}
+.detail-pair-row .detail-gray{min-width:0;min-height:28px;}
+#detailDialog .mail-body-main{
+  min-height:150px!important;
+}
+
+/* Summary actions: mail (program tabs only) -> sort -> search -> add. */
+#summaryBar #sortBtn{margin-left:auto!important;}
+#summaryBar.program-view #programPostBtn{margin-left:auto!important;}
+#summaryBar.program-view #sortBtn{margin-left:0!important;}
+#summaryBar #filterToggleBtn,
+#summaryBar #addBtn{margin-left:0!important;}
+.sort-btn{font-size:19px!important;}
+.sort-menu{min-width:200px!important;z-index:70!important;}
+
+/* Sent/Adopted filter row: program filter appears to the left of radio name. */
+#programFilter[hidden]{display:none!important;}
+
+/* Memo composer has no radio-name/corner fields by design. */
+#quickComposerDialog.memo-mode #draftFields{display:none!important;}
