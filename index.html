@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver15">
+  <link rel="stylesheet" href="styles.css?v=ver16">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.15</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.16</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="globalSearchBtn" class="icon-btn" aria-label="横断検索">⌕</button>
@@ -26,6 +26,7 @@
     <button id="statsBtn">記録</button>
     <button id="programSettingsBtn">番組設定</button>
     <button id="settingsBtn">設定</button>
+    <button id="trashBtn">ゴミ箱</button>
     <input id="restoreInput" type="file" accept=".json,application/json" hidden>
     <input id="csvImportInput" type="file" accept=".csv,text/csv" hidden>
   </div>
@@ -155,7 +156,7 @@
     <label>番組<select id="programSettingsSelect"></select></label>
     <label>投稿フォームURL<input id="programFormUrl" type="url" placeholder="https://..."></label>
     <label>メールアドレス<input id="programEmail" type="email" placeholder="example@example.com"></label>
-    <label>デフォルトのラジオネーム<input id="programDefaultName" placeholder="例：ななお"></label>
+    <label>デフォルトのラジオネーム<input id="programDefaultName" placeholder="例：ラジオ猫"></label>
     <label>コーナー管理<textarea id="programCorners" rows="5" placeholder="1行に1コーナー
 ふつおた
 リアクション"></textarea></label>
@@ -217,6 +218,10 @@
     <button type="button" id="closeStatsDialog" class="close">×</button>
   </div>
   <div class="stats-mode-row"><label>表示する記録<select id="statsMode"><option value="overview">全体</option><option value="program">番組別</option><option value="corner">コーナー別</option><option value="name">ラジオネーム別</option><option value="month">月別</option></select></label></div>
+  <div class="stats-period-row">
+    <label>期間<select id="statsPeriod"><option value="all">すべて</option><option value="year">今年</option><option value="fiscal">今年度</option><option value="30days">過去30日</option><option value="custom">指定</option></select></label>
+    <div id="statsCustomPeriod" class="stats-custom-period" hidden><input id="statsFrom" type="date" aria-label="記録の開始日"><span>〜</span><input id="statsTo" type="date" aria-label="記録の終了日"></div>
+  </div>
   <div id="statsContent" class="stats-content"></div>
 </dialog>
 
@@ -294,7 +299,13 @@
   <div hidden><input id="composerLabel" type="hidden"><select id="composerLabelColor" hidden><option value="yellow">黄</option></select></div>
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
+
+<dialog id="trashDialog" class="compact-dialog trash-dialog">
+  <div class="dialog-head"><h2>ゴミ箱</h2><button type="button" id="closeTrashDialog" class="close">×</button></div>
+  <div class="trash-toolbar"><span id="trashCount">0件</span><button type="button" id="emptyTrashBtn" class="danger">ゴミ箱を空にする</button></div>
+  <div id="trashList" class="trash-list"></div>
+</dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver15"></script>
+<script src="app.js?v=ver16"></script>
 </body>
 </html>

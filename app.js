@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.15";
+const APP_VERSION="ver.16";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -1118,4 +1118,56 @@ $("csvBtn").onclick=()=>{
   downloadBlob("radio-mail-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));toast("CSVを書き出しました");
 };
 
+render();
+
+
+// ===== ver.16 adjustments =====
+const TRASH_KEY="radioMailManager.trash.v1";
+let trashItems=[];
+try{trashItems=JSON.parse(localStorage.getItem(TRASH_KEY)||"[]")||[];}catch{trashItems=[];}
+function saveTrash(){localStorage.setItem(TRASH_KEY,JSON.stringify(trashItems));}
+function moveMailToTrash(id){const x=mails.find(m=>m.id===id);if(!x)return false;trashItems.unshift({trashId:uid(),kind:x.status==="draft"?"draft":"mail",deletedAt:new Date().toISOString(),data:{...x}});mails=mails.filter(m=>m.id!==id);localStorage.setItem(KEY,JSON.stringify(mails));saveTrash();return true;}
+function moveMemoToTrash(id){const x=memoItems.find(m=>m.id===id);if(!x)return false;trashItems.unshift({trashId:uid(),kind:"memo",deletedAt:new Date().toISOString(),data:{...x}});memoItems=memoItems.filter(m=>m.id!==id);localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));saveTrash();return true;}
+function trashKindLabel(t){return t.kind==="memo"?"メモ":t.kind==="draft"?"下書き":"メール";}
+function trashPreview(t){const d=t.data||{};return String(t.kind==="memo"?d.text:(d.body||d.summary||d.program||"（本文なし）")).replace(/\s+/g," ").trim().slice(0,90)||"（本文なし）";}
+function renderTrash(){
+  $("trashCount").textContent=`${trashItems.length}件`;
+  $("emptyTrashBtn").disabled=!trashItems.length;
+  $("trashList").innerHTML=trashItems.map(t=>`<article class="trash-item" data-trash-id="${t.trashId}"><div class="trash-item-head"><span>${trashKindLabel(t)}</span><time>${t.deletedAt?new Date(t.deletedAt).toLocaleString("ja-JP"):""}</time></div><div class="trash-preview">${esc(trashPreview(t))}</div><div class="trash-actions"><button type="button" class="secondary trash-restore">復元</button><button type="button" class="danger trash-delete-forever">完全削除</button></div></article>`).join("")||'<div class="search-empty">ゴミ箱は空です</div>';
+}
+$("trashBtn").onclick=()=>{$("moreMenu").hidden=true;renderTrash();$("trashDialog").showModal();};
+$("closeTrashDialog").onclick=()=>$("trashDialog").close();
+$("emptyTrashBtn").onclick=()=>{if(!trashItems.length)return;if(confirm("ゴミ箱の中身を完全に削除しますか？この操作は元に戻せません。")){trashItems=[];saveTrash();renderTrash();toast("ゴミ箱を空にしました");}};
+$("trashList").onclick=e=>{const item=e.target.closest(".trash-item");if(!item)return;const i=trashItems.findIndex(t=>t.trashId===item.dataset.trashId);if(i<0)return;const t=trashItems[i];if(e.target.closest(".trash-restore")){const d={...(t.data||{})};if(t.kind==="memo"){if(memoItems.some(x=>x.id===d.id))d.id=uid();memoItems.push(d);localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));}else{if(mails.some(x=>x.id===d.id))d.id=uid();mails.push(d);localStorage.setItem(KEY,JSON.stringify(mails));}trashItems.splice(i,1);saveTrash();renderTrash();render();toast("復元しました");}else if(e.target.closest(".trash-delete-forever")){if(confirm("この項目を完全に削除しますか？")){trashItems.splice(i,1);saveTrash();renderTrash();toast("完全に削除しました");}}};
+
+// Existing delete actions now move items to Trash instead of deleting permanently.
+$("deleteBtn").onclick=()=>{if(editingId&&confirm("このメールをゴミ箱に移動しますか？")){moveMailToTrash(editingId);$("editDialog").close();render();toast("ゴミ箱に移動しました");}};
+$("detailDeleteBtn").onclick=()=>{if(currentDetailId&&confirm("このメールをゴミ箱に移動しますか？")){moveMailToTrash(currentDetailId);$("detailDialog").close();render();toast("ゴミ箱に移動しました");}};
+$("memoDeleteBtn").onclick=()=>{if(currentMemoId&&confirm("このメモをゴミ箱に移動しますか？")){moveMemoToTrash(currentMemoId);$("memoDialog").close();renderMemos();toast("ゴミ箱に移動しました");}};
+$("deleteMemoMenuBtn").onclick=()=>{const id=memoMenuTargetId;$("memoMenu").hidden=true;if(id&&confirm("このメモをゴミ箱に移動しますか？")){moveMemoToTrash(id);renderMemos();toast("ゴミ箱に移動しました");}};
+$("deleteDraftMenuBtn").onclick=()=>{const id=draftMenuTargetId;$("draftMenu").hidden=true;if(id&&confirm("この下書きをゴミ箱に移動しますか？")){moveMailToTrash(id);renderDrafts();toast("ゴミ箱に移動しました");}};
+
+// Complete backups include Trash as of ver.16.
+$("backupBtn").onclick=()=>{const bundle={format:"radio-mail-manager-backup",version:APP_VERSION,exportedAt:new Date().toISOString(),data:{mails,memos:memoItems,programSettings,programOrder,sortModes,appSettings,theme:localStorage.getItem(THEME_KEY)||"green",selectedView,autosave:autosaveState(),trash:trashItems}};downloadBlob("radio-mail-manager-complete-"+new Date().toISOString().slice(0,10)+".json",new Blob([JSON.stringify(bundle,null,2)],{type:"application/json"}));toast("完全バックアップを書き出しました");};
+const restoreV16Base=$("restoreInput").onchange;
+$("restoreInput").onchange=async e=>{let raw=null;const f=e.target.files[0];if(f){try{raw=JSON.parse(await f.text());}catch{}e.target.value="";}if(!raw){alert("復元できるバックアップJSONではありません。");return;}try{if(Array.isArray(raw)){if(!confirm(`${raw.length}件のメールデータに置き換えます。よろしいですか？`))return;mails=raw;}else if(raw?.format==="radio-mail-manager-backup"&&raw.data){if(!confirm("メール・メモ・番組設定・表示設定・ゴミ箱などをバックアップ内容に置き換えます。よろしいですか？"))return;const d=raw.data;mails=Array.isArray(d.mails)?d.mails:[];memoItems=Array.isArray(d.memos)?d.memos:[];programSettings=d.programSettings||{};programOrder=Array.isArray(d.programOrder)?d.programOrder:[];sortModes=d.sortModes||{};appSettings={...appSettings,...(d.appSettings||{})};appSettings.showFields={program:true,episode:true,airDate:true,name:true,corner:true,summary:true,url:true,memo:true,...(appSettings.showFields||{})};selectedView=d.selectedView||"__memo__";trashItems=Array.isArray(d.trash)?d.trash:[];localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));localStorage.setItem(SORT_MODES_KEY,JSON.stringify(sortModes));localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));localStorage.setItem("radioMailManager.selectedView",selectedView);if(d.autosave)localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(d.autosave));if(d.theme)applyTheme(d.theme);saveTrash();applyDisplaySettings();}else throw 0;mails=mails.map(x=>({...x,id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",favorite:!!x.favorite,status:x.status||"sent"}));stripLegacyLabels();localStorage.setItem(KEY,JSON.stringify(mails));render();toast("復元しました");}catch{alert("復元できるバックアップJSONではありません。");}};
+
+// Statistics period filter.
+function statsDateValue(x){return x.sentAt||x.addedAt||x.createdAt||"";}
+function statsPeriodBounds(){const mode=$("statsPeriod")?.value||"all",now=new Date();let from=null,to=null;if(mode==="year"){from=new Date(now.getFullYear(),0,1);to=new Date(now.getFullYear()+1,0,1);}else if(mode==="fiscal"){const y=now.getMonth()>=3?now.getFullYear():now.getFullYear()-1;from=new Date(y,3,1);to=new Date(y+1,3,1);}else if(mode==="30days"){to=new Date(now);to.setHours(23,59,59,999);from=new Date(now);from.setDate(from.getDate()-29);from.setHours(0,0,0,0);}else if(mode==="custom"){const f=$("statsFrom")?.value,t=$("statsTo")?.value;if(f)from=new Date(f+"T00:00:00");if(t){to=new Date(t+"T00:00:00");to.setDate(to.getDate()+1);}}return {from,to};}
+function filterStatsPeriod(items){const {from,to}=statsPeriodBounds();return items.filter(x=>{const s=statsDateValue(x);if(!s)return !from&&!to;const d=new Date(s);return (!from||d>=from)&&(!to||d<to);});}
+statsData=function(){const allSent=mails.filter(x=>x.status==="sent"||x.status==="adopted"),sent=filterStatsPeriod(allSent),adopted=sent.filter(x=>x.status==="adopted"),drafts=mails.filter(x=>x.status==="draft");return {sent,adopted,drafts,rate:sent.length?Math.round(adopted.length/sent.length*100):0};};
+aggregateStats=function(items,key){return [...new Set(items.map(x=>x[key]).filter(Boolean))].map(name=>{const group=items.filter(x=>x[key]===name),adopted=group.filter(x=>x.status==="adopted").length;return {name,sent:group.length,adopted,rate:group.length?Math.round(adopted/group.length*100):0};}).sort((a,b)=>b.sent-a.sent||b.adopted-a.adopted);};
+const buildStatsV16Base=buildStats;
+buildStats=function(){buildStatsV16Base();};
+$("statsPeriod").addEventListener("change",()=>{$("statsCustomPeriod").hidden=$("statsPeriod").value!=="custom";buildStats();});
+["statsFrom","statsTo"].forEach(id=>$(id).addEventListener("change",buildStats));
+const statsBtnV16Base=$("statsBtn").onclick;
+$("statsBtn").onclick=()=>{$("moreMenu").hidden=true;if($("statsMode"))$("statsMode").value="overview";if($("statsPeriod"))$("statsPeriod").value="all";$("statsCustomPeriod").hidden=true;buildStats();$("statsDialog").showModal();};
+
+// Sent list: adopted mails get only a thin accent line at the right edge of the program-name cell.
+const renderV16Base=render;
+render=function(){renderV16Base();if(selectedView==="__sent__"){document.querySelectorAll("#mailTable tr[data-id]").forEach(tr=>{const x=mails.find(m=>m.id===tr.dataset.id);const cell=tr.querySelector("td:first-child");if(cell){cell.classList.toggle("sent-program-adopted",x?.status==="adopted");}});} };
+
+bindBackdropCloseToAllDialogs();
 render();
