@@ -1176,3 +1176,37 @@ html[data-detail-density="large"] #detailDialog .detail-pair-row .detail-gray{mi
 #mailTable td.sent-program-adopted{position:relative;padding-right:10px!important}
 #mailTable td.sent-program-adopted::after{content:"";position:absolute;right:3px;top:22%;height:56%;width:2px;border-radius:2px;background:var(--accent,#4b9f5b)}
 .stats-period-row{padding:8px 14px 0;display:flex;flex-direction:column;gap:7px}.stats-period-row>label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:700}.stats-period-row select{min-width:150px;border:1px solid #ccc;border-radius:8px;background:#fff;padding:7px 9px;font:inherit}.stats-custom-period{display:flex;align-items:center;gap:6px}.stats-custom-period input{min-width:0;flex:1;border:1px solid #ccc;border-radius:8px;background:#fff;padding:7px;font:inherit}.trash-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid #eee;font-size:12px}.trash-list{max-height:65vh;overflow:auto;padding:6px 14px 14px}.trash-item{padding:10px 0;border-bottom:1px solid #eee}.trash-item-head{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#777}.trash-item-head>span{font-weight:700;color:#555}.trash-preview{font-size:12px;line-height:1.45;margin:5px 0 8px;word-break:break-word}.trash-actions{display:flex;justify-content:flex-end;gap:6px}.trash-actions button{padding:6px 9px;font-size:11px}
+
+
+/* ===== ver.17 =====
+   Reversible detail-layout experiment:
+   - draft composer/detail hide radio-name and corner UI, but their stored values are preserved;
+   - memo/draft detail body fields use nearly the full dialog width;
+   - draft footer is a single horizontal row like memo detail.
+*/
+
+/* Draft add/edit: body-only composer. Keep the fields in DOM for rollback/data preservation. */
+#quickComposerDialog.draft-mode #draftFields{display:none!important;}
+#quickComposerDialog.draft-mode #composerText{padding-left:14px!important;padding-right:14px!important;}
+
+/* Memo detail uses the same roomy width as the lightweight memo composer. */
+#memoDialog{width:min(96vw,560px)!important;max-width:560px!important;}
+#memoDialog .memo-dialog-body{padding:10px!important;}
+#memoDialogInput{width:100%!important;min-height:360px!important;max-height:66vh!important;box-sizing:border-box!important;}
+.memo-favorite-btn{margin-left:auto!important;font-size:25px!important;}
+#memoDialog .dialog-head h2{flex:1 1 auto!important;}
+
+/* Draft detail is body-only and uses almost the full available width. */
+#detailDialog.draft-detail-v17{width:min(96vw,640px)!important;}
+#detailDialog.draft-detail-v17 #detailContent{padding:0!important;}
+#detailDialog.draft-detail-v17 .draft-detail-body-wrap.v17-body-only{padding:8px 10px!important;margin:0!important;}
+#detailDialog.draft-detail-v17 .draft-detail-body{width:100%!important;box-sizing:border-box!important;min-height:430px!important;max-height:68vh!important;padding:12px!important;font-size:15px!important;line-height:1.6!important;}
+
+/* Draft detail footer: one horizontal row, matching memo detail's compact action row. */
+#detailDialog.draft-detail-v17 .detail-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;flex-wrap:nowrap!important;padding:8px 10px!important;}
+#detailDialog.draft-detail-v17 .detail-actions button{width:100%!important;min-width:0!important;flex:none!important;padding:7px 4px!important;font-size:11px!important;white-space:nowrap!important;}
+#detailDialog.draft-detail-v17 #detailEditBtn{display:none!important;}
+#detailDialog.draft-detail-v17 #markAdoptedBtn{display:block!important;flex-basis:auto!important;}
+
+/* Favorite marker in memo/draft lists: stays beside the character count. */
+.list-favorite-star{color:#d49b00;font-size:.95em;font-weight:700;vertical-align:baseline;}

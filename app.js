@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.16";
+const APP_VERSION="ver.17";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -1171,3 +1171,76 @@ render=function(){renderV16Base();if(selectedView==="__sent__"){document.querySe
 
 bindBackdropCloseToAllDialogs();
 render();
+
+
+// ===== ver.17 adjustments =====
+// Draft radio-name/corner fields are intentionally hidden, but the stored values are preserved
+// so the ver.16 layout can be restored without losing old draft metadata.
+
+function renderMemosV17(){
+  $("memoTimeline").innerHTML=memoItems.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(m=>`<article class="memo-card" data-id="${m.id}"><button class="memo-options-btn" type="button" aria-label="メモのオプション">…</button><div class="memo-text">${esc(m.text)}</div><div class="memo-meta"><span>${formatMemoDate(m.createdAt)}</span><span>${m.text.length}文字${m.favorite?' <span class="list-favorite-star" aria-label="お気に入り">★</span>':''}</span></div></article>`).join("");
+}
+renderMemos=renderMemosV17;
+
+function renderDraftsV17(){
+  const rows=mails.filter(x=>x.status==="draft").sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  $("draftTimeline").innerHTML=rows.map(x=>`<article class="draft-card" data-id="${x.id}"><button class="draft-options-btn" type="button" aria-label="下書きのオプション">…</button><div class="draft-body">${esc((x.body||"").replace(/\s+/g," ").trim()||"（本文なし）")}</div><div class="draft-meta"><span>${x.createdAt?formatMemoDate(x.createdAt):"日時不明"}</span><span>${(x.body||"").length}文字${x.favorite?' <span class="list-favorite-star" aria-label="お気に入り">★</span>':''}</span></div></article>`).join("");
+}
+renderDrafts=renderDraftsV17;
+
+const openMemoDialogV17Base=openMemoDialog;
+openMemoDialog=function(id=null){
+  openMemoDialogV17Base(id);
+  const m=id?memoItems.find(x=>x.id===id):null;
+  const b=$("memoFavoriteBtn");
+  if(b){
+    b.hidden=!m;
+    b.textContent=m?.favorite?"★":"☆";
+    b.classList.toggle("active",!!m?.favorite);
+  }
+};
+$("memoFavoriteBtn").onclick=()=>{
+  if(!currentMemoId)return;
+  const m=memoItems.find(x=>x.id===currentMemoId);if(!m)return;
+  m.favorite=!m.favorite;
+  localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
+  $("memoFavoriteBtn").textContent=m.favorite?"★":"☆";
+  $("memoFavoriteBtn").classList.toggle("active",m.favorite);
+  renderMemos();
+  toast(m.favorite?"お気に入りに追加":"お気に入りを解除");
+};
+
+// Keep favorites when a new memo is created or existing memo is edited.
+// Existing save/autosave handlers already mutate only text and preserve unknown fields.
+
+// Draft composer: metadata fields remain in the DOM/data model for rollback compatibility,
+// but are hidden from the user in ver.17.
+const openDraftComposerV17Base=openDraftComposer;
+openDraftComposer=function(id=null){
+  openDraftComposerV17Base(id);
+  $("draftFields").hidden=true;
+};
+
+// Draft detail: body-only layout, with original name/corner data preserved in storage.
+const openDetailV17Base=openDetail;
+openDetail=function(id){
+  openDetailV17Base(id);
+  const x=mails.find(m=>m.id===id);if(!x)return;
+  const isDraft=x.status==="draft";
+  $("detailDialog").classList.toggle("draft-detail-v17",isDraft);
+  if(isDraft){
+    $("detailContent").innerHTML=`<div class="draft-detail-body-wrap v17-body-only"><textarea class="draft-detail-body" data-key="body" placeholder="本文">${esc(x.body||"")}</textarea></div>`;
+    bindDetailEditors();
+    const body=$("detailContent").querySelector(".draft-detail-body");
+    body?.addEventListener("input",()=>{$("detailCount").textContent=`${body.value.length}文字`;});
+    $("markAdoptedBtn").textContent="送信済に追加";
+  }
+};
+
+// Ensure normal mail details never inherit the draft-only footer/layout class.
+$("detailDialog").addEventListener("close",()=>$("detailDialog").classList.remove("draft-detail-v17"));
+
+// Normalize memo favorite flags without disturbing old backups.
+memoItems=memoItems.map(m=>({...m,favorite:!!m.favorite}));
+localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
+renderMemos();

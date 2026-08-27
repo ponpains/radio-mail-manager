@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver16">
+  <link rel="stylesheet" href="styles.css?v=ver17">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.16</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.17</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="globalSearchBtn" class="icon-btn" aria-label="横断検索">⌕</button>
@@ -269,6 +269,7 @@
   <div class="dialog-head">
     <h2 id="memoDialogTitle">メモ</h2>
     <span id="memoDetailCount" class="detail-count" hidden></span>
+    <button type="button" id="memoFavoriteBtn" class="favorite-btn memo-favorite-btn" aria-label="お気に入り" hidden>☆</button>
     <button type="button" id="closeMemoDialog" class="close">×</button>
   </div>
   <div class="memo-dialog-body">
@@ -306,6 +307,6 @@
   <div id="trashList" class="trash-list"></div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver16"></script>
+<script src="app.js?v=ver17"></script>
 </body>
 </html>
