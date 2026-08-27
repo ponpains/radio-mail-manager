@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver14">
+  <link rel="stylesheet" href="styles.css?v=ver15">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.14</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.15</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="globalSearchBtn" class="icon-btn" aria-label="横断検索">⌕</button>
@@ -115,7 +115,7 @@
     <div class="detail-body detail-gray add-mail-summary"><strong>要約</strong><br><textarea id="summary" rows="1" placeholder="要約"></textarea></div>
     <div class="detail-body detail-gray"><strong>URL</strong><br><input id="url" type="url" placeholder="https://..."></div>
     <div class="detail-body detail-gray add-mail-memo"><strong>メモ</strong><br><textarea id="memo" rows="1" placeholder="メモ"></textarea></div>
-    <div class="label-editor"><input id="mailLabel" placeholder="ラベル（任意）" maxlength="20"><select id="mailLabelColor" aria-label="ラベル色"><option value="yellow">黄</option><option value="blue">青</option><option value="green">緑</option><option value="pink">桃</option><option value="purple">紫</option><option value="gray">灰</option></select></div>
+    <div hidden><input id="mailLabel" type="hidden"><select id="mailLabelColor" hidden><option value="yellow">黄</option></select></div>
 
     <div class="detail-actions">
       <button type="button" id="deleteBtn" class="danger" hidden>削除</button>
@@ -216,6 +216,7 @@
     <h2>記録</h2>
     <button type="button" id="closeStatsDialog" class="close">×</button>
   </div>
+  <div class="stats-mode-row"><label>表示する記録<select id="statsMode"><option value="overview">全体</option><option value="program">番組別</option><option value="corner">コーナー別</option><option value="name">ラジオネーム別</option><option value="month">月別</option></select></label></div>
   <div id="statsContent" class="stats-content"></div>
 </dialog>
 
@@ -267,7 +268,7 @@
   </div>
   <div class="memo-dialog-body">
     <textarea id="memoDialogInput" maxlength="500" placeholder="メールのアイデアをメモ"></textarea>
-    <div class="label-editor"><input id="memoLabel" placeholder="ラベル（任意）" maxlength="20"><select id="memoLabelColor"><option value="yellow">黄</option><option value="blue">青</option><option value="green">緑</option><option value="pink">桃</option><option value="purple">紫</option><option value="gray">灰</option></select></div>
+    <div hidden><input id="memoLabel" type="hidden"><select id="memoLabelColor" hidden><option value="yellow">黄</option></select></div>
     <div class="memo-dialog-meta"><span id="memoDialogCount">0 / 500</span><span id="memoDialogDate"></span></div>
   </div>
   <div class="detail-actions">
@@ -290,10 +291,10 @@
     <input id="draftCorner" list="cornerList" placeholder="コーナー">
   </div>
   <textarea id="composerText" maxlength="1000" placeholder="いま何を考えてる？"></textarea>
-  <div class="composer-label-row"><input id="composerLabel" placeholder="ラベル" maxlength="20"><select id="composerLabelColor"><option value="yellow">黄</option><option value="blue">青</option><option value="green">緑</option><option value="pink">桃</option><option value="purple">紫</option><option value="gray">灰</option></select></div>
+  <div hidden><input id="composerLabel" type="hidden"><select id="composerLabelColor" hidden><option value="yellow">黄</option></select></div>
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver14"></script>
+<script src="app.js?v=ver15"></script>
 </body>
 </html>

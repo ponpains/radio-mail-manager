@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.14";
+const APP_VERSION="ver.15";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -61,8 +61,8 @@ function createdAtFromId(id){
   const d=new Date(ms);
   return Number.isNaN(d.getTime())?"":d.toISOString();
 }
-mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:(x.name==="ガンバレななお"||x.name==="ガンバレな")?"ガンバレないわ":x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",label:x.label||"",labelColor:x.labelColor||"yellow",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||"",createdAt:x.createdAt||createdAtFromId(x.id)||x.sentAt||"",addedAt:x.addedAt||((x.status==="sent"||x.status==="adopted")?(x.sentAt||x.createdAt||createdAtFromId(x.id)||""):"")}));
-memoItems=memoItems.map(m=>({...m,label:m.label||"",labelColor:m.labelColor||"yellow"}));
+mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:(x.name==="ガンバレななお"||x.name==="ガンバレな")?"ガンバレないわ":x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||"",createdAt:x.createdAt||createdAtFromId(x.id)||x.sentAt||"",addedAt:x.addedAt||((x.status==="sent"||x.status==="adopted")?(x.sentAt||x.createdAt||createdAtFromId(x.id)||""):"")}));
+memoItems=memoItems.map(m=>{const {label,labelColor,...rest}=m;return rest;});
 localStorage.setItem(KEY,JSON.stringify(mails));
 function adoptedPrograms(){
   const existing=[...new Set(mails.filter(x=>x.status==="adopted").map(x=>x.program).filter(Boolean))];
@@ -287,7 +287,7 @@ function render(){
     ${isSentView?"":`<td><span class="fit-text">${esc(x.episode)}</span></td>`}
     <td><span class="fit-text">${esc(x.name)}</span></td>
     <td><span class="fit-text">${esc(x.corner)}</span></td>
-    <td><span class="fit-text">${esc(x.summary||"—")}</span></td>
+    <td><span class="fit-text">${esc(x.body||"—")}</span></td>
   </tr>`).join("");
   requestAnimationFrame(fitAllText);
 }
@@ -394,7 +394,7 @@ function openDetail(id){
         </div>
         <div class="k">状態</div><div class="status-cell">${x.status==="adopted"?"採用":"送信済み"}${x.sentAt?`<span class="sent-at">送信 ${new Date(x.sentAt).toLocaleString("ja-JP")}</span>`:""}</div>
       </div>
-      <div class="detail-body detail-gray editable-block-v1 mail-body-main" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div>
+      <div class="detail-body mail-body-section"><strong>本文</strong><br><div class="detail-gray editable-block-v1 mail-body-main" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div></div>
       ${x.summary?`<div class="detail-body"><strong>要約</strong><br><div class="detail-gray editable-block-v1" data-key="summary" contenteditable="true">${esc(x.summary)}</div></div>`:""}
       <div class="detail-body"><strong>Podcast URL</strong><br><div id="podcastBlock"></div></div>
       ${x.memo?`<div class="detail-body"><strong>メモ</strong><br><div class="detail-gray editable-block-v1" data-key="memo" contenteditable="true">${esc(x.memo)}</div></div>`:""}`;
@@ -887,7 +887,7 @@ $("restoreInput").onchange=async e=>{
       localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));localStorage.setItem("radioMailManager.selectedView",selectedView);
       if(d.autosave)localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(d.autosave));if(d.theme)applyTheme(d.theme);applyDisplaySettings();
     }else throw new Error("format");
-    mails=mails.map(x=>({...x,id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",label:x.label||"",labelColor:x.labelColor||"yellow",favorite:!!x.favorite,status:x.status||"sent"}));
+    mails=mails.map(x=>({...x,id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",favorite:!!x.favorite,status:x.status||"sent"}));
     localStorage.setItem(KEY,JSON.stringify(mails));render();toast("復元しました");
   }catch(err){alert("復元できるバックアップJSONではありません。");}
   finally{e.target.value="";}
@@ -905,9 +905,9 @@ $("csvImportInput").onchange=async e=>{
   try{
     const rows=parseCSV(await f.text());if(rows.length<2)throw 0;const head=rows[0].map(x=>x.trim());
     const ix=(...names)=>head.findIndex(h=>names.includes(h));
-    const map={status:ix("状態","status"),favorite:ix("お気に入り","favorite"),program:ix("番組","番組名","program"),episode:ix("放送回","episode"),airDate:ix("放送日","airDate"),name:ix("ラジオネーム","RN","name"),corner:ix("コーナー","corner"),body:ix("メール本文","本文","body"),summary:ix("要約","summary"),url:ix("URL","Podcast URL","url"),memo:ix("メモ","memo"),label:ix("ラベル","label")};
+    const map={status:ix("状態","status"),favorite:ix("お気に入り","favorite"),program:ix("番組","番組名","program"),episode:ix("放送回","episode"),airDate:ix("放送日","airDate"),name:ix("ラジオネーム","RN","name"),corner:ix("コーナー","corner"),body:ix("メール本文","本文","body"),summary:ix("要約","summary"),url:ix("URL","Podcast URL","url"),memo:ix("メモ","memo")};
     if(map.body<0)throw 0;const now=new Date().toISOString();
-    const imported=rows.slice(1).filter(r=>r.some(Boolean)).map(r=>{const v=k=>map[k]>=0?(r[map[k]]||"").trim():"";const st=v("status");return {id:uid(),program:v("program")||"不明",episode:v("episode")||"不明",airDate:v("airDate"),name:v("name"),corner:v("corner"),body:v("body"),summary:v("summary")||v("body").slice(0,40),url:v("url"),memo:v("memo"),label:v("label"),labelColor:"yellow",favorite:/★|1|true|yes/i.test(v("favorite")),status:/採用|adopt/i.test(st)?"adopted":"sent",sentAt:now,createdAt:now,addedAt:now};});
+    const imported=rows.slice(1).filter(r=>r.some(Boolean)).map(r=>{const v=k=>map[k]>=0?(r[map[k]]||"").trim():"";const st=v("status");return {id:uid(),program:v("program")||"不明",episode:v("episode")||"不明",airDate:v("airDate"),name:v("name"),corner:v("corner"),body:v("body"),summary:v("summary")||v("body").slice(0,40),url:v("url"),memo:v("memo"),favorite:/★|1|true|yes/i.test(v("favorite")),status:/採用|adopt/i.test(st)?"adopted":"sent",sentAt:now,createdAt:now,addedAt:now};});
     if(!confirm(`${imported.length}件を現在のデータに追加します。よろしいですか？`))return;
     mails.push(...imported);localStorage.setItem(KEY,JSON.stringify(mails));render();toast(`${imported.length}件を読み込みました`);
   }catch{alert("CSVを読み込めませんでした。本文列を含むCSVを使用してください。");}
@@ -1002,4 +1002,120 @@ render=function(){renderV14Base();document.querySelectorAll("#mailTable tr").for
 
 // Rebind global dialog backdrop-close after new dialogs and render once.
 bindBackdropCloseToAllDialogs();
+render();
+
+
+// ===== ver.15 adjustments =====
+// Label feature removed from the UI and active behavior.
+labelChip=function(){return "";};
+function stripLegacyLabels(){
+  mails=mails.map(x=>{const {label,labelColor,...rest}=x;return rest;});
+  memoItems=memoItems.map(x=>{const {label,labelColor,...rest}=x;return rest;});
+  localStorage.setItem(KEY,JSON.stringify(mails));
+  localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
+}
+stripLegacyLabels();
+
+// Cross-search no longer includes labels.
+renderGlobalSearch=function(){
+  const q=$("globalSearchInput").value.trim().toLowerCase();
+  if(!q){$("globalSearchResults").innerHTML='<div class="search-empty">キーワードを入力してください</div>';return;}
+  const hits=[];
+  for(const m of memoItems){if(String(m.text||"").toLowerCase().includes(q))hits.push({kind:"memo",id:m.id,title:"メモ",text:m.text});}
+  for(const x of mails){
+    if([x.program,x.episode,x.name,x.corner,x.body,x.summary,x.memo].join(" ").toLowerCase().includes(q))
+      hits.push({kind:x.status,id:x.id,title:x.status==="draft"?"下書き":x.status==="adopted"?"採用":"送信済",text:x.body||x.summary});
+  }
+  $("globalSearchResults").innerHTML=hits.slice(0,100).map(h=>`<button class="global-hit" data-kind="${h.kind}" data-id="${h.id}"><span class="global-hit-kind">${h.title}</span><strong>${esc((h.text||"").replace(/\s+/g," ").slice(0,80)||"（本文なし）")}</strong></button>`).join("")||'<div class="search-empty">該当するデータはありません</div>';
+};
+
+// Adoption can be toggled from every non-draft mail detail.
+const openDetailV15Base=openDetail;
+openDetail=function(id){
+  openDetailV15Base(id);
+  const x=mails.find(m=>m.id===id);if(!x)return;
+  const isDraft=x.status==="draft";
+  $("adoptHeaderBtn").hidden=isDraft;
+  if(!isDraft){
+    const adopted=x.status==="adopted";
+    $("adoptHeaderBtn").classList.toggle("active",adopted);
+    $("adoptHeaderBtn").textContent=adopted?"採用済":"採用";
+    $("adoptHeaderBtn").title=adopted?"押すと採用を解除します":"押すと採用にします";
+  }
+};
+$("adoptHeaderBtn").onclick=()=>{
+  const x=mails.find(m=>m.id===currentDetailId);if(!x||x.status==="draft")return;
+  const wasAdopted=x.status==="adopted";
+  x.status=wasAdopted?"sent":"adopted";
+  if(!x.sentAt)x.sentAt=new Date().toISOString();
+  if(!x.addedAt)x.addedAt=x.sentAt||new Date().toISOString();
+  localStorage.setItem(KEY,JSON.stringify(mails));
+  const disappearing=wasAdopted&&(selectedView==="__adopted__"||!String(selectedView).startsWith("__"));
+  render();
+  if(disappearing){$("detailDialog").close();toast("採用を解除しました");}
+  else{$("detailDialog").close();openDetail(x.id);toast(wasAdopted?"採用を解除しました":"採用にしました");}
+};
+
+// Body column always reflects the actual body field.
+const renderV15Base=render;
+render=function(){
+  renderV15Base();
+  if(selectedView!=="__memo__"&&selectedView!=="__draft__"){
+    const rows=filtered();
+    document.querySelectorAll("#mailTable tr[data-id]").forEach((tr,i)=>{
+      const x=rows[i];if(!x)return;
+      const last=tr.querySelector("td:last-child .fit-text");
+      if(last)last.textContent=x.body||"—";
+    });
+    requestAnimationFrame(fitAllText);
+  }
+};
+
+// Statistics: choose what kind of record to display.
+function statsData(){
+  const sent=mails.filter(x=>x.status==="sent"||x.status==="adopted"),adopted=mails.filter(x=>x.status==="adopted"),drafts=mails.filter(x=>x.status==="draft");
+  return {sent,adopted,drafts,rate:sent.length?Math.round(adopted.length/sent.length*100):0};
+}
+function aggregateStats(items,key){
+  return [...new Set(items.map(x=>x[key]).filter(Boolean))].map(name=>{
+    const sent=items.filter(x=>x[key]===name).length;
+    const adopted=mails.filter(x=>x.status==="adopted"&&x[key]===name).length;
+    return {name,sent,adopted,rate:sent?Math.round(adopted/sent*100):0};
+  }).sort((a,b)=>b.sent-a.sent||b.adopted-a.adopted);
+}
+buildStats=function(){
+  const mode=$("statsMode")?.value||"overview";
+  const {sent,adopted,drafts,rate}=statsData();
+  const now=new Date(),ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  if(mode==="overview"){
+    const thisMonth=sent.filter(x=>(x.sentAt||x.addedAt||"").startsWith(ym));
+    const thisYear=sent.filter(x=>(x.sentAt||x.addedAt||"").startsWith(String(now.getFullYear())));
+    $("statsContent").innerHTML=`<div class="stats-hero"><div><strong>${sent.length}</strong><span>送信</span></div><div><strong>${adopted.length}</strong><span>採用</span></div><div><strong>${rate}%</strong><span>採用率</span></div></div><div class="stats-subgrid"><span>今月 <strong>${thisMonth.length}</strong>通</span><span>今年 <strong>${thisYear.length}</strong>通</span><span>下書き <strong>${drafts.length}</strong></span><span>メモ <strong>${memoItems.length}</strong></span></div>`;
+    return;
+  }
+  if(mode==="month"){
+    const map=new Map();
+    for(const x of sent){const d=x.sentAt||x.addedAt||x.createdAt||"";const k=d.slice(0,7)||"日時不明";if(!map.has(k))map.set(k,{sent:0,adopted:0});map.get(k).sent++;if(x.status==="adopted")map.get(k).adopted++;}
+    const rows=[...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
+    $("statsContent").innerHTML=`<div class="stats-list">${rows.map(([k,v])=>`<div class="stats-row"><strong>${esc(k)}</strong><span>${v.sent}送信 / ${v.adopted}採用 / ${v.sent?Math.round(v.adopted/v.sent*100):0}%</span></div>`).join("")||"—"}</div>`;return;
+  }
+  const key=mode==="program"?"program":mode==="corner"?"corner":"name";
+  const rows=aggregateStats(sent,key);
+  $("statsContent").innerHTML=`<div class="stats-list">${rows.map(x=>`<div class="stats-row"><strong>${esc(x.name)}</strong><span>${x.sent}送信 / ${x.adopted}採用 / ${x.rate}%</span></div>`).join("")||"—"}</div>`;
+};
+$("statsMode")?.addEventListener("change",buildStats);
+$("statsBtn").onclick=()=>{$("moreMenu").hidden=true;if($("statsMode"))$("statsMode").value="overview";buildStats();$("statsDialog").showModal();};
+
+// Restored older backups may contain legacy label fields; remove them after restore.
+const restoreInputV15Base=$("restoreInput").onchange;
+$("restoreInput").onchange=async e=>{await restoreInputV15Base(e);stripLegacyLabels();render();};
+
+// CSV export without the removed label feature.
+$("csvBtn").onclick=()=>{
+  const cols=["状態","お気に入り","番組","放送回","放送日","ラジオネーム","コーナー","メール本文","要約","URL","メモ"];
+  const rows=mails.filter(x=>x.status!=="draft").map(x=>[x.status==="adopted"?"採用":"送信済み",x.favorite?"★":"",x.program,x.episode,x.airDate,x.name,x.corner,x.body,x.summary,x.url,x.memo]);
+  const csv="\uFEFF"+[cols,...rows].map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\r\n");
+  downloadBlob("radio-mail-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));toast("CSVを書き出しました");
+};
+
 render();
