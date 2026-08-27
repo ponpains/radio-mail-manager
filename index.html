@@ -6,25 +6,28 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver13">
+  <link rel="stylesheet" href="styles.css?v=ver14">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.13</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.14</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
+    <button id="globalSearchBtn" class="icon-btn" aria-label="横断検索">⌕</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
   </div>
   <div id="moreMenu" class="more-menu" hidden>
     <button id="backupBtn">バックアップ</button>
     <button id="restoreBtn">復元</button>
     <button id="csvBtn">CSV書出</button>
+    <button id="csvImportBtn">CSV読込</button>
     <button id="themeBtn">テーマカラー</button>
     <button id="statsBtn">記録</button>
     <button id="programSettingsBtn">番組設定</button>
     <button id="settingsBtn">設定</button>
     <input id="restoreInput" type="file" accept=".json,application/json" hidden>
+    <input id="csvImportInput" type="file" accept=".csv,text/csv" hidden>
   </div>
 </header>
 <div id="programMenu" class="context-menu" hidden>
@@ -112,6 +115,7 @@
     <div class="detail-body detail-gray add-mail-summary"><strong>要約</strong><br><textarea id="summary" rows="1" placeholder="要約"></textarea></div>
     <div class="detail-body detail-gray"><strong>URL</strong><br><input id="url" type="url" placeholder="https://..."></div>
     <div class="detail-body detail-gray add-mail-memo"><strong>メモ</strong><br><textarea id="memo" rows="1" placeholder="メモ"></textarea></div>
+    <div class="label-editor"><input id="mailLabel" placeholder="ラベル（任意）" maxlength="20"><select id="mailLabelColor" aria-label="ラベル色"><option value="yellow">黄</option><option value="blue">青</option><option value="green">緑</option><option value="pink">桃</option><option value="purple">紫</option><option value="gray">灰</option></select></div>
 
     <div class="detail-actions">
       <button type="button" id="deleteBtn" class="danger" hidden>削除</button>
@@ -126,6 +130,7 @@
     <h2 id="detailTitle">メール詳細</h2>
     <span id="detailCount" class="detail-count" hidden></span>
     <span id="detailAddedAt" class="detail-added-at" hidden></span>
+    <button type="button" id="adoptHeaderBtn" class="adopt-header-btn" hidden>採用</button>
     <button type="button" id="favoriteBtn" class="favorite-btn" aria-label="お気に入り">☆</button>
     <button type="button" id="closeDetail" class="close">×</button>
   </div>
@@ -150,7 +155,10 @@
     <label>番組<select id="programSettingsSelect"></select></label>
     <label>投稿フォームURL<input id="programFormUrl" type="url" placeholder="https://..."></label>
     <label>メールアドレス<input id="programEmail" type="email" placeholder="example@example.com"></label>
-    <label>放送曜日<input id="programWeekday" placeholder="例：毎週火曜"></label>
+    <label>デフォルトのラジオネーム<input id="programDefaultName" placeholder="例：ななお"></label>
+    <label>コーナー管理<textarea id="programCorners" rows="5" placeholder="1行に1コーナー
+ふつおた
+リアクション"></textarea></label>
     <div class="program-settings-actions">
       <button type="button" id="openProgramPostBtn" class="secondary">投稿先を開く</button>
       <button type="button" id="saveProgramSettingsBtn" class="primary">保存</button>
@@ -185,7 +193,17 @@
         <option value="compact">コンパクト</option><option value="medium">標準</option><option value="large">ゆったり</option>
       </select>
     </label>
-    <div class="app-settings-note">表示に関する設定だけを変更します。メールやメモのデータには影響しません。</div>
+    <fieldset class="display-fields-setting"><legend>詳細画面の表示項目</legend>
+      <label><input type="checkbox" id="showProgramSetting">番組</label>
+      <label><input type="checkbox" id="showEpisodeSetting">放送回</label>
+      <label><input type="checkbox" id="showAirDateSetting">放送日</label>
+      <label><input type="checkbox" id="showNameSetting">ラジオネーム</label>
+      <label><input type="checkbox" id="showCornerSetting">コーナー</label>
+      <label><input type="checkbox" id="showSummarySetting">要約</label>
+      <label><input type="checkbox" id="showUrlSetting">Podcast URL</label>
+      <label><input type="checkbox" id="showMemoSetting">メモ</label>
+    </fieldset>
+    <div class="app-settings-note">表示設定は端末内に保存されます。非表示にしてもデータ自体は削除されません。</div>
     <div class="program-settings-actions">
       <button type="button" id="resetSettingsBtn" class="secondary">初期値に戻す</button>
       <button type="button" id="saveSettingsBtn" class="primary">保存</button>
@@ -199,6 +217,15 @@
     <button type="button" id="closeStatsDialog" class="close">×</button>
   </div>
   <div id="statsContent" class="stats-content"></div>
+</dialog>
+
+
+<dialog id="globalSearchDialog" class="search-dialog">
+  <div class="dialog-head"><h2>横断検索</h2><button type="button" id="closeGlobalSearchDialog" class="close">×</button></div>
+  <div class="global-search-body">
+    <input id="globalSearchInput" type="search" placeholder="メモ・下書き・送信済・採用を検索">
+    <div id="globalSearchResults" class="global-search-results"></div>
+  </div>
 </dialog>
 
 <dialog id="themeDialog" class="compact-dialog">
@@ -240,6 +267,7 @@
   </div>
   <div class="memo-dialog-body">
     <textarea id="memoDialogInput" maxlength="500" placeholder="メールのアイデアをメモ"></textarea>
+    <div class="label-editor"><input id="memoLabel" placeholder="ラベル（任意）" maxlength="20"><select id="memoLabelColor"><option value="yellow">黄</option><option value="blue">青</option><option value="green">緑</option><option value="pink">桃</option><option value="purple">紫</option><option value="gray">灰</option></select></div>
     <div class="memo-dialog-meta"><span id="memoDialogCount">0 / 500</span><span id="memoDialogDate"></span></div>
   </div>
   <div class="detail-actions">
@@ -262,9 +290,10 @@
     <input id="draftCorner" list="cornerList" placeholder="コーナー">
   </div>
   <textarea id="composerText" maxlength="1000" placeholder="いま何を考えてる？"></textarea>
+  <div class="composer-label-row"><input id="composerLabel" placeholder="ラベル" maxlength="20"><select id="composerLabelColor"><option value="yellow">黄</option><option value="blue">青</option><option value="green">緑</option><option value="pink">桃</option><option value="purple">紫</option><option value="gray">灰</option></select></div>
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver13"></script>
+<script src="app.js?v=ver14"></script>
 </body>
 </html>

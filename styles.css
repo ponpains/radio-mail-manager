@@ -1149,3 +1149,22 @@ html[data-detail-density="medium"] #detailDialog .detail-pair-row .detail-gray{m
 html[data-detail-density="large"] #detailDialog .mail-detail-grid{grid-template-columns:68px 1fr!important;gap:7px 8px!important;padding-top:12px!important;padding-bottom:10px!important;font-size:12px!important;}
 html[data-detail-density="large"] #detailDialog .mail-detail-grid>.detail-gray,
 html[data-detail-density="large"] #detailDialog .detail-pair-row .detail-gray{min-height:30px!important;padding:5px 7px!important;font-size:13px!important;}
+
+/* ===== ver.14 ===== */
+/* Sent items no longer get a special adopted background. */
+.table-wrap tbody tr.adopted-row{background:transparent!important}
+
+.top-actions{display:flex;align-items:center;gap:4px}
+.adopt-header-btn{border:1px solid var(--accent,#4b9f5b);background:#fff;color:var(--accent,#4b9f5b);border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700;white-space:nowrap}
+.adopt-header-btn.active{background:var(--accent,#4b9f5b);color:#fff}
+
+.program-settings-body textarea{width:100%;box-sizing:border-box;border:1px solid #ccc;border-radius:9px;padding:9px;background:#fff;font:inherit;resize:vertical}
+.display-fields-setting{border:1px solid #ddd;border-radius:10px;padding:9px 10px;margin:10px 0;display:grid;grid-template-columns:1fr 1fr;gap:7px 10px}
+.display-fields-setting legend{font-size:12px;color:#666;padding:0 4px}.display-fields-setting label{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;font-size:12px}.display-fields-setting input{width:auto!important}
+
+.label-editor,.composer-label-row{display:flex;gap:6px;align-items:center;margin-top:6px}.label-editor input,.composer-label-row input{flex:1;min-width:0;border:1px solid #ccc;border-radius:8px;padding:7px 8px;background:#fff;font:inherit}.label-editor select,.composer-label-row select{width:auto;border:1px solid #ccc;border-radius:8px;padding:7px;background:#fff;font:inherit}.composer-label-row{padding:0 14px 7px}
+.item-label{display:inline-flex;align-items:center;max-width:120px;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#333}.label-yellow{background:#fff1a8}.label-blue{background:#dcecff}.label-green{background:#dff3df}.label-pink{background:#ffe0ea}.label-purple{background:#eadfff}.label-gray{background:#e8e8e8}.detail-label-wrap{margin:0 0 7px}.memo-meta .item-label,.draft-meta .item-label{margin-left:auto}
+
+.search-dialog{width:min(94vw,620px);max-height:82vh}.global-search-body{display:flex;flex-direction:column;gap:10px}.global-search-body>input{width:100%;box-sizing:border-box;background:#fff;border:1px solid #ccc;border-radius:10px;padding:11px;font:inherit}.global-search-results{display:flex;flex-direction:column;gap:6px;max-height:62vh;overflow:auto}.global-hit{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid #ddd;border-radius:10px;background:#fff;padding:9px}.global-hit-kind{font-size:10px;color:#777;white-space:nowrap}.global-hit strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.search-empty{padding:28px 10px;text-align:center;color:#888;font-size:12px}
+
+.stats-subgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0 14px}.stats-subgrid span{background:#f6f6f6;border-radius:9px;padding:8px 10px;font-size:12px}.stats-content h3{font-size:13px;margin:14px 0 6px}
