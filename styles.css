@@ -1086,3 +1086,66 @@ main{
 
 /* Memo composer has no radio-name/corner fields by design. */
 #quickComposerDialog.memo-mode #draftFields{display:none!important;}
+
+
+/* ===== ver.13 ===== */
+/* Sent tab omits episode: program / radio name / corner / body. */
+.table-wrap table.sent-four-col th:nth-child(1),.table-wrap table.sent-four-col td:nth-child(1){width:20%!important;}
+.table-wrap table.sent-four-col th:nth-child(2),.table-wrap table.sent-four-col td:nth-child(2){width:22%!important;}
+.table-wrap table.sent-four-col th:nth-child(3),.table-wrap table.sent-four-col td:nth-child(3){width:23%!important;}
+.table-wrap table.sent-four-col th:nth-child(4),.table-wrap table.sent-four-col td:nth-child(4){width:35%!important;}
+
+/* Draft detail: metadata stays tiny; body gets memo-detail-like space. */
+#detailDialog .draft-detail-meta{gap:5px!important;padding:6px 12px 5px!important;}
+#detailDialog .draft-detail-meta label{font-size:9px!important;}
+#detailDialog .draft-detail-meta label span{margin-bottom:2px!important;}
+#detailDialog .draft-detail-small{height:24px!important;min-height:24px!important;padding:2px 6px!important;font-size:11px!important;border-radius:6px!important;}
+#detailDialog .draft-detail-body-wrap{padding:0 12px 7px!important;}
+#detailDialog .draft-detail-body{min-height:330px!important;max-height:60vh!important;padding:10px!important;}
+
+/* Mail detail: aggressively compact metadata to prioritize the body. */
+#detailDialog .mail-detail-grid{grid-template-columns:48px 1fr!important;gap:3px 5px!important;padding:6px 12px 5px!important;font-size:10px!important;}
+#detailDialog .mail-detail-grid>.k{font-size:9px!important;align-self:center!important;}
+#detailDialog .mail-detail-grid>.detail-gray{min-height:22px!important;padding:2px 5px!important;font-size:11px!important;}
+#detailDialog .detail-pair-row{gap:5px!important;}
+#detailDialog .detail-pair-row label{font-size:9px!important;}
+#detailDialog .detail-pair-row label>span{margin:0 0 1px 1px!important;}
+#detailDialog .detail-pair-row .detail-gray{min-height:22px!important;padding:2px 5px!important;font-size:11px!important;}
+#detailDialog .detail-date-edit{height:20px!important;min-height:20px!important;padding:0 3px!important;font-size:10px!important;border:0!important;}
+#detailDialog .status-cell{font-size:10px!important;min-height:20px!important;padding:2px 0!important;}
+#detailDialog .sent-at{font-size:9px!important;margin-left:5px!important;}
+#detailDialog .mail-body-main{min-height:230px!important;font-size:13px!important;line-height:1.6!important;}
+
+/* Sort selection is local to the current tab. */
+.sort-menu button.active{font-weight:700!important;background:var(--accent-soft)!important;color:var(--accent)!important;}
+
+/* Display settings. */
+.app-settings-body{padding:12px 14px!important;}
+.app-settings-body label{margin:10px 0!important;}
+.app-settings-body select{display:block;width:100%;margin-top:4px;padding:8px 9px;border:1px solid #ccc;border-radius:8px;background:#fff;font:inherit;}
+.app-settings-note{margin-top:10px;font-size:10px;color:#777;line-height:1.5;}
+
+html[data-font-size="small"] body{font-size:13px;}
+html[data-font-size="small"] .table-wrap table{font-size:10px!important;}
+html[data-font-size="small"] .memo-text,html[data-font-size="small"] .draft-body{font-size:12px!important;}
+html[data-font-size="large"] body{font-size:17px;}
+html[data-font-size="large"] .table-wrap table{font-size:13px!important;}
+html[data-font-size="large"] .memo-text,html[data-font-size="large"] .draft-body{font-size:15px!important;}
+
+html[data-tab-size="small"] .program-tab{padding:5px 10px!important;font-size:11px!important;}
+html[data-tab-size="small"] .program-tabs{padding-top:5px!important;padding-bottom:5px!important;gap:4px!important;}
+html[data-tab-size="large"] .program-tab{padding:10px 17px!important;font-size:14px!important;}
+html[data-tab-size="large"] .program-tabs{padding-top:10px!important;padding-bottom:10px!important;gap:7px!important;}
+
+html[data-row-size="compact"] .table-wrap th,html[data-row-size="compact"] .table-wrap td{padding-top:4px!important;padding-bottom:4px!important;}
+html[data-row-size="compact"] .memo-card,html[data-row-size="compact"] .draft-card{padding-top:7px!important;padding-bottom:7px!important;}
+html[data-row-size="large"] .table-wrap th,html[data-row-size="large"] .table-wrap td{padding-top:11px!important;padding-bottom:11px!important;}
+html[data-row-size="large"] .memo-card,html[data-row-size="large"] .draft-card{padding-top:15px!important;padding-bottom:15px!important;}
+
+/* Compact is the ver.13 default. Other settings deliberately loosen only metadata. */
+html[data-detail-density="medium"] #detailDialog .mail-detail-grid{grid-template-columns:58px 1fr!important;gap:5px 7px!important;padding-top:9px!important;padding-bottom:8px!important;font-size:11px!important;}
+html[data-detail-density="medium"] #detailDialog .mail-detail-grid>.detail-gray,
+html[data-detail-density="medium"] #detailDialog .detail-pair-row .detail-gray{min-height:26px!important;padding:4px 6px!important;font-size:12px!important;}
+html[data-detail-density="large"] #detailDialog .mail-detail-grid{grid-template-columns:68px 1fr!important;gap:7px 8px!important;padding-top:12px!important;padding-bottom:10px!important;font-size:12px!important;}
+html[data-detail-density="large"] #detailDialog .mail-detail-grid>.detail-gray,
+html[data-detail-density="large"] #detailDialog .detail-pair-row .detail-gray{min-height:30px!important;padding:5px 7px!important;font-size:13px!important;}

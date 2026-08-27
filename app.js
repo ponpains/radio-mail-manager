@@ -1,10 +1,12 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.12";
+const APP_VERSION="ver.13";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
 const PROGRAM_SETTINGS_KEY="radioMailManager.programSettings.v1";
 const PROGRAM_ORDER_KEY="radioMailManager.programOrder.v1";
+const SORT_MODES_KEY="radioMailManager.sortModes.v1";
+const APP_SETTINGS_KEY="radioMailManager.displaySettings.v1";
 const OLD_KEYS=["radioMailManager.v2","radioMailManager.v1"];
 let raw=localStorage.getItem(KEY);
 if(!raw){for(const k of OLD_KEYS){if(localStorage.getItem(k)){raw=localStorage.getItem(k);break}}}
@@ -12,13 +14,25 @@ let mails=raw?JSON.parse(raw):[];
 let selectedView="__memo__";
 let editingId=null,currentDetailId=null,deferredPrompt=null;
 let favoriteOnly=false;
-let sortMode="episodeAsc";
+let sortModes=JSON.parse(localStorage.getItem(SORT_MODES_KEY)||"{}");
+let appSettings={fontSize:"medium",tabSize:"medium",rowSize:"medium",detailDensity:"compact",...JSON.parse(localStorage.getItem(APP_SETTINGS_KEY)||"{}")};
 let memoItems=JSON.parse(localStorage.getItem(MEMO_KEY)||"[]");
 let programSettings=JSON.parse(localStorage.getItem(PROGRAM_SETTINGS_KEY)||"{}");
 let programOrder=JSON.parse(localStorage.getItem(PROGRAM_ORDER_KEY)||"[]");
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+function defaultSortForView(view){return view==="__sent__"?"postedDesc":"episodeAsc"}
+function currentSortMode(){return sortModes[selectedView]||defaultSortForView(selectedView)}
+function setCurrentSortMode(mode){sortModes[selectedView]=mode;localStorage.setItem(SORT_MODES_KEY,JSON.stringify(sortModes))}
+function applyDisplaySettings(){
+  const root=document.documentElement;
+  root.dataset.fontSize=appSettings.fontSize||"medium";
+  root.dataset.tabSize=appSettings.tabSize||"medium";
+  root.dataset.rowSize=appSettings.rowSize||"medium";
+  root.dataset.detailDensity=appSettings.detailDensity||"compact";
+}
+
 function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
 function episodeNum(s){const m=String(s||"").match(/\d+/);return m?Number(m[0]):999999}
 function save(){localStorage.setItem(KEY,JSON.stringify(mails));render()}
@@ -200,11 +214,15 @@ function refreshFilters(){
   options($("cornerFilter"),[...new Set(scoped.map(x=>x.corner).filter(Boolean))].sort(),"コーナー");
 }
 function mailAddedTime(x){return new Date(x.addedAt||x.sentAt||x.createdAt||0).getTime()||0}
+function mailPostedTime(x){return new Date(x.sentAt||x.addedAt||x.createdAt||0).getTime()||0}
 function sortRows(rows){
+  const sortMode=currentSortMode();
   return [...rows].sort((a,b)=>{
     if(sortMode==="episodeDesc")return episodeNum(b.episode)-episodeNum(a.episode);
     if(sortMode==="addedDesc")return mailAddedTime(b)-mailAddedTime(a);
     if(sortMode==="addedAsc")return mailAddedTime(a)-mailAddedTime(b);
+    if(sortMode==="postedDesc")return mailPostedTime(b)-mailPostedTime(a);
+    if(sortMode==="postedAsc")return mailPostedTime(a)-mailPostedTime(b);
     if(sortMode==="nameAsc")return String(a.name||"").localeCompare(String(b.name||""),"ja");
     if(sortMode==="cornerAsc")return String(a.corner||"").localeCompare(String(b.corner||""),"ja");
     return episodeNum(a.episode)-episodeNum(b.episode);
@@ -248,17 +266,22 @@ function render(){
   $("programPostBtn").hidden=!isProgramView;
   $("summaryBar").classList.toggle("program-view",isProgramView);
 
-  const showProgramColumn=selectedView==="__sent__"||selectedView==="__adopted__";
+  const isSentView=selectedView==="__sent__";
+  const isAdoptedView=selectedView==="__adopted__";
+  const showProgramColumn=isSentView||isAdoptedView;
   const table=document.querySelector(".table-wrap table");
-  table.classList.toggle("five-col",showProgramColumn);
-  table.classList.toggle("four-col",!showProgramColumn);
-  table.querySelector("thead tr").innerHTML=showProgramColumn
-    ?`<th>番組名</th><th>放送回</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th>`
-    :`<th>放送回</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th>`;
+  table.classList.toggle("five-col",isAdoptedView);
+  table.classList.toggle("sent-four-col",isSentView);
+  table.classList.toggle("four-col",!isAdoptedView&&!isSentView);
+  table.querySelector("thead tr").innerHTML=isSentView
+    ?`<th>番組名</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th>`
+    :isAdoptedView
+      ?`<th>番組名</th><th>放送回</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th>`
+      :`<th>放送回</th><th>ラジオネーム</th><th>コーナー</th><th>本文</th>`;
 
-  $("mailTable").innerHTML=rows.map(x=>`<tr data-id="${x.id}" class="${selectedView==="__sent__"&&x.status==="adopted"?"adopted-row":""}">
+  $("mailTable").innerHTML=rows.map(x=>`<tr data-id="${x.id}" class="${isSentView&&x.status==="adopted"?"adopted-row":""}">
     ${showProgramColumn?`<td><span class="fit-text">${esc(x.program)}</span></td>`:""}
-    <td><span class="fit-text">${esc(x.episode)}</span></td>
+    ${isSentView?"":`<td><span class="fit-text">${esc(x.episode)}</span></td>`}
     <td><span class="fit-text">${esc(x.name)}</span></td>
     <td><span class="fit-text">${esc(x.corner)}</span></td>
     <td><span class="fit-text">${esc(x.summary||"—")}</span></td>
@@ -590,6 +613,7 @@ document.querySelectorAll(".theme-choice").forEach(btn=>{
   };
 });
 applyTheme(localStorage.getItem(THEME_KEY)||"green");
+applyDisplaySettings();
 
 
 
@@ -642,17 +666,25 @@ $("copyBodyBtn").onclick=async()=>{
   }
 };
 
+function refreshSortMenu(){
+  const menu=$("sortMenu");
+  const sent=selectedView==="__sent__";
+  menu.innerHTML=sent
+    ?`<button data-sort="postedDesc">投稿日時：新しい順</button><button data-sort="postedAsc">投稿日時：古い順</button><button data-sort="episodeAsc">放送回：昇順</button><button data-sort="episodeDesc">放送回：降順</button><button data-sort="nameAsc">ラジオネーム順</button><button data-sort="cornerAsc">コーナー順</button>`
+    :`<button data-sort="episodeAsc">放送回：昇順</button><button data-sort="episodeDesc">放送回：降順</button><button data-sort="addedDesc">追加日時：新しい順</button><button data-sort="addedAsc">追加日時：古い順</button><button data-sort="nameAsc">ラジオネーム順</button><button data-sort="cornerAsc">コーナー順</button>`;
+  menu.querySelectorAll("button[data-sort]").forEach(b=>b.classList.toggle("active",b.dataset.sort===currentSortMode()));
+}
 $("sortBtn").onclick=e=>{
-  e.stopPropagation();
+  e.stopPropagation();refreshSortMenu();
   const menu=$("sortMenu"),r=$("sortBtn").getBoundingClientRect();
   menu.style.left=Math.max(8,Math.min(r.right-210,window.innerWidth-218))+"px";
-  menu.style.top=Math.min(r.bottom+6,window.innerHeight-250)+"px";
+  menu.style.top=Math.min(r.bottom+6,window.innerHeight-290)+"px";
   menu.hidden=!menu.hidden;
   $("sortBtn").setAttribute("aria-expanded",String(!menu.hidden));
 };
 $("sortMenu").addEventListener("click",e=>{
   const btn=e.target.closest("button[data-sort]");if(!btn)return;
-  sortMode=btn.dataset.sort;
+  setCurrentSortMode(btn.dataset.sort);
   $("sortMenu").hidden=true;$("sortBtn").setAttribute("aria-expanded","false");
   render();toast(btn.textContent);
 });
@@ -776,6 +808,20 @@ function loadProgramSettingsForm(){
   $("programEmail").value=s.email||"";
   $("programWeekday").value=s.weekday||"";
 }
+function loadSettingsForm(){
+  $("fontSizeSetting").value=appSettings.fontSize||"medium";
+  $("tabSizeSetting").value=appSettings.tabSize||"medium";
+  $("rowSizeSetting").value=appSettings.rowSize||"medium";
+  $("detailDensitySetting").value=appSettings.detailDensity||"compact";
+}
+$("settingsBtn").onclick=()=>{$("moreMenu").hidden=true;loadSettingsForm();$("settingsDialog").showModal();};
+$("closeSettingsDialog").onclick=()=>$("settingsDialog").close();
+$("saveSettingsBtn").onclick=()=>{
+  appSettings={fontSize:$("fontSizeSetting").value,tabSize:$("tabSizeSetting").value,rowSize:$("rowSizeSetting").value,detailDensity:$("detailDensitySetting").value};
+  localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));applyDisplaySettings();$("settingsDialog").close();toast("表示設定を保存しました");
+};
+$("resetSettingsBtn").onclick=()=>{appSettings={fontSize:"medium",tabSize:"medium",rowSize:"medium",detailDensity:"compact"};localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));applyDisplaySettings();loadSettingsForm();toast("表示設定を初期値に戻しました");};
+
 $("programSettingsBtn").onclick=()=>{$("moreMenu").hidden=true;refreshProgramSettingsSelect();$("programSettingsDialog").showModal();};
 $("programSettingsSelect").addEventListener("change",loadProgramSettingsForm);
 $("closeProgramSettingsDialog").onclick=()=>$("programSettingsDialog").close();

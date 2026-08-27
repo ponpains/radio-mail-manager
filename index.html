@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver12">
+  <link rel="stylesheet" href="styles.css?v=ver13">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.12</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.13</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
@@ -23,6 +23,7 @@
     <button id="themeBtn">テーマカラー</button>
     <button id="statsBtn">記録</button>
     <button id="programSettingsBtn">番組設定</button>
+    <button id="settingsBtn">設定</button>
     <input id="restoreInput" type="file" accept=".json,application/json" hidden>
   </div>
 </header>
@@ -157,6 +158,41 @@
   </div>
 </dialog>
 
+
+<dialog id="settingsDialog" class="compact-dialog">
+  <div class="dialog-head">
+    <h2>設定</h2>
+    <button type="button" id="closeSettingsDialog" class="close">×</button>
+  </div>
+  <div class="app-settings-body">
+    <label>文字サイズ
+      <select id="fontSizeSetting">
+        <option value="small">小</option><option value="medium">中</option><option value="large">大</option>
+      </select>
+    </label>
+    <label>タブのサイズ
+      <select id="tabSizeSetting">
+        <option value="small">小</option><option value="medium">中</option><option value="large">大</option>
+      </select>
+    </label>
+    <label>一覧の高さ
+      <select id="rowSizeSetting">
+        <option value="compact">コンパクト</option><option value="medium">標準</option><option value="large">ゆったり</option>
+      </select>
+    </label>
+    <label>詳細情報欄
+      <select id="detailDensitySetting">
+        <option value="compact">コンパクト</option><option value="medium">標準</option><option value="large">ゆったり</option>
+      </select>
+    </label>
+    <div class="app-settings-note">表示に関する設定だけを変更します。メールやメモのデータには影響しません。</div>
+    <div class="program-settings-actions">
+      <button type="button" id="resetSettingsBtn" class="secondary">初期値に戻す</button>
+      <button type="button" id="saveSettingsBtn" class="primary">保存</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="statsDialog" class="compact-dialog">
   <div class="dialog-head">
     <h2>記録</h2>
@@ -229,6 +265,6 @@
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver12"></script>
+<script src="app.js?v=ver13"></script>
 </body>
 </html>
