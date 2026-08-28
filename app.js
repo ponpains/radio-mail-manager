@@ -1,10 +1,11 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.24";
+const APP_VERSION="ver.25";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
 const PROGRAM_SETTINGS_KEY="radioMailManager.programSettings.v1";
 const PROGRAM_ORDER_KEY="radioMailManager.programOrder.v1";
+const MANUAL_PROGRAM_TABS_KEY="radioMailManager.manualProgramTabs.v1";
 const SORT_MODES_KEY="radioMailManager.sortModes.v1";
 const APP_SETTINGS_KEY="radioMailManager.displaySettings.v1";
 const AUTOSAVE_KEY="radioMailManager.autosave.v1";
@@ -22,6 +23,7 @@ appSettings.showFields={program:true,episode:true,airDate:true,name:true,corner:
 let memoItems=JSON.parse(localStorage.getItem(MEMO_KEY)||"[]");
 let programSettings=JSON.parse(localStorage.getItem(PROGRAM_SETTINGS_KEY)||"{}");
 let programOrder=JSON.parse(localStorage.getItem(PROGRAM_ORDER_KEY)||"[]");
+let manualProgramTabs=JSON.parse(localStorage.getItem(MANUAL_PROGRAM_TABS_KEY)||"[]");
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -48,16 +50,11 @@ if(isFreshInstall&&!localStorage.getItem(FIRST_RUN_KEY)){
 思いつきを「メモ」→文章にしたら「下書き」→送ったら「送信済み」→読まれたら「採用」と記録していくアプリです。
 
 ・＋：そのタブに新しく追加
-・＋を長押し：メモ／下書き／送信済みをすぐ作成
-・一覧を長押し：複数選択してコピー・お気に入り・削除など
-・右上の⌕：メモから採用までまとめて検索
-・メモ／下書き右上の🔍：そのタブだけ検索
+・右上の⌕：検索対象を「メモ」「下書き」「メール」「横断」から選んで検索
 ・「…」→番組設定：投稿先URL・メールアドレス・ラジオネーム・コーナーを管理
-・「…」→バックアップ：端末移行用の完全バックアップ
-・「…」→緊急バックアップをコピー：ファイル保存できない時にJSONをクリップボードへ退避
-・「…」→詳細書き出し：投稿・採用記録をCSVで書き出し
+・「…」→バックアップ・その他：端末移行用の完全バックアップなどを利用
 
-番組名は送信済み／採用の追加画面で自由に入力できます。採用メールを登録すると、その番組のタブが自動で作られます。
+番組名は送信済み／採用の追加画面で自由に入力できます。「採用」状態にした番組は専用タブとして表示されます。番組設定から専用タブを追加することもできます。
 
 この案内は普通のメモなので、不要になったら削除して大丈夫です。`
   }];
@@ -76,9 +73,12 @@ mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episo
 memoItems=memoItems.map(m=>{const {label,labelColor,...rest}=m;return rest;});
 localStorage.setItem(KEY,JSON.stringify(mails));
 function adoptedPrograms(){
-  const existing=[...new Set(mails.filter(x=>x.status==="adopted").map(x=>x.program).filter(Boolean))];
-  programOrder=programOrder.filter(p=>existing.includes(p));
-  existing.forEach(p=>{if(!programOrder.includes(p))programOrder.push(p)});
+  const adopted=[...new Set(mails.filter(x=>x.status==="adopted").map(x=>x.program).filter(Boolean))];
+  manualProgramTabs=[...new Set((manualProgramTabs||[]).filter(Boolean))];
+  localStorage.setItem(MANUAL_PROGRAM_TABS_KEY,JSON.stringify(manualProgramTabs));
+  const visible=[...new Set([...manualProgramTabs,...adopted])];
+  programOrder=programOrder.filter(p=>visible.includes(p));
+  visible.forEach(p=>{if(!programOrder.includes(p))programOrder.push(p)});
   localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));
   return [...programOrder];
 }
@@ -142,7 +142,9 @@ $("renameProgramBtn").onclick=()=>{
   if(!nn||nn===program)return;
   mails=mails.map(x=>x.program===program?{...x,program:nn}:x);
   programOrder=programOrder.map(p=>p===program?nn:p);
+  manualProgramTabs=manualProgramTabs.map(p=>p===program?nn:p);
   localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));
+  localStorage.setItem(MANUAL_PROGRAM_TABS_KEY,JSON.stringify(manualProgramTabs));
   if(programSettings[program]){programSettings[nn]=programSettings[program];delete programSettings[program];localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));}
   if(selectedView===program)selectedView=nn;
   localStorage.setItem("radioMailManager.selectedView",selectedView);
@@ -156,7 +158,9 @@ $("deleteProgramBtn").onclick=()=>{
   if(confirm(`「${program}」のメールをすべて削除しますか？`)){
     mails=mails.filter(x=>x.program!==program);
     programOrder=programOrder.filter(p=>p!==program);
+    manualProgramTabs=manualProgramTabs.filter(p=>p!==program);
     localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));
+    localStorage.setItem(MANUAL_PROGRAM_TABS_KEY,JSON.stringify(manualProgramTabs));
     delete programSettings[program];localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));
     if(selectedView===program)selectedView="__adopted__";
     localStorage.setItem("radioMailManager.selectedView",selectedView);
@@ -865,7 +869,7 @@ $("openProgramPostBtn").onclick=()=>{
 
 // ===== ver.14 enhancements =====
 function allPrograms(){
-  const set=new Set([...programOrder,...Object.keys(programSettings),...mails.map(x=>x.program).filter(p=>p&&p!=="不明")]);
+  const set=new Set([...programOrder,...manualProgramTabs,...Object.keys(programSettings),...mails.map(x=>x.program).filter(p=>p&&p!=="不明")]);
   return [...set];
 }
 function programCorners(program){
@@ -1902,4 +1906,124 @@ for(const id of ["programMenu","memoMenu","draftMenu","sortMenu","moreMenu","qui
 // Create at most one automatic generation per calendar day when the app starts.
 setTimeout(maybeDailyAutoBackup,500);
 bindBackdropCloseToAllDialogs();
+render();
+
+
+// ===== ver.25 adjustments =====
+// Search is centralized in the top-right search dialog.
+renderGlobalSearch=function(){
+  const q=String($("globalSearchInput")?.value||"").trim().toLowerCase();
+  const scope=$("globalSearchScope")?.value||"all";
+  if(!q){$("globalSearchResults").innerHTML='<div class="search-empty">キーワードを入力してください</div>';return;}
+  const hits=[];
+  if(scope==="memo"||scope==="all"){
+    for(const m of memoItems){if(String(m.text||"").toLowerCase().includes(q))hits.push({kind:"memo",id:m.id,title:"メモ",text:m.text});}
+  }
+  if(scope==="draft"||scope==="all"){
+    for(const x of mails.filter(x=>x.status==="draft")){
+      if([x.program,x.episode,x.name,x.corner,x.body,x.summary,x.memo].join(" ").toLowerCase().includes(q))hits.push({kind:"draft",id:x.id,title:"下書き",text:x.body||x.summary});
+    }
+  }
+  if(scope==="mail"||scope==="all"){
+    for(const x of mails.filter(x=>x.status!=="draft")){
+      if([x.program,x.episode,x.name,x.corner,x.body,x.summary,x.memo].join(" ").toLowerCase().includes(q))hits.push({kind:x.status,id:x.id,title:x.status==="adopted"?"採用":"送信済",text:x.body||x.summary});
+    }
+  }
+  $("globalSearchResults").innerHTML=hits.slice(0,100).map(h=>`<button class="global-hit" data-kind="${h.kind}" data-id="${h.id}"><span class="global-hit-kind">${h.title}</span><strong>${esc((h.text||"").replace(/\s+/g," ").slice(0,80)||"（本文なし）")}</strong></button>`).join("")||'<div class="search-empty">該当するデータはありません</div>';
+};
+$("globalSearchScope")?.addEventListener("change",renderGlobalSearch);
+const globalSearchBtnV25=$("globalSearchBtn");
+if(globalSearchBtnV25)globalSearchBtnV25.onclick=()=>{$("globalSearchInput").value="";$("globalSearchScope").value="all";renderGlobalSearch();$("globalSearchDialog").showModal();setTimeout(()=>$("globalSearchInput").focus(),50);};
+
+// Backup/export actions live in a second-level menu to keep the main options short.
+$("backupFolderBtn")?.addEventListener("click",e=>{
+  e.stopPropagation();
+  const parent=$("moreMenu"),menu=$("backupMenu"),btn=$("backupFolderBtn");
+  const r=btn.getBoundingClientRect();
+  parent.hidden=true;menu.hidden=false;
+  fitFloatingToVisualViewport(menu,r.left,r.bottom+6);
+});
+for(const id of ["backupBtn","backupCopyBtn","autoBackupBtn","restoreBtn","csvBtn","analysisExportBtn","csvImportBtn"]){
+  $(id)?.addEventListener("click",()=>{$("backupMenu").hidden=true;},{capture:true});
+}
+document.addEventListener("click",e=>{if(!e.target.closest("#backupMenu")&&!e.target.closest("#backupFolderBtn"))$("backupMenu").hidden=true;});
+
+// Program settings can create a visible dedicated tab even before an adoption exists.
+$("addProgramTabBtn")?.addEventListener("click",()=>{
+  const name=String($("newProgramTabName")?.value||"").trim();
+  if(!name)return toast("番組名を入力してください");
+  if(name.startsWith("__"))return toast("別の番組名を入力してください");
+  if(!manualProgramTabs.includes(name))manualProgramTabs.push(name);
+  if(!programOrder.includes(name))programOrder.push(name);
+  programSettings[name]=programSettings[name]||{formUrl:"",email:"",defaultName:"",corners:[]};
+  localStorage.setItem(MANUAL_PROGRAM_TABS_KEY,JSON.stringify(manualProgramTabs));
+  localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));
+  localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));
+  $("newProgramTabName").value="";
+  refreshProgramSettingsSelect();
+  $("programSettingsSelect").value=name;loadProgramSettingsForm();renderProgramTabs();
+  toast(`「${name}」タブを追加しました`);
+});
+
+// Persist manual tabs in complete backups while remaining compatible with older bundles.
+const buildCompleteBundleV25Base=buildCompleteBundle;
+buildCompleteBundle=function(){const b=buildCompleteBundleV25Base();b.data.manualProgramTabs=manualProgramTabs;return b;};
+const backupBtnV25Base=$("backupBtn")?.onclick;
+if($("backupBtn"))$("backupBtn").onclick=()=>{const bundle=buildCompleteBundle();downloadBlob("radio-mail-manager-complete-"+new Date().toISOString().slice(0,10)+".json",new Blob([JSON.stringify(bundle,null,2)],{type:"application/json"}));toast("完全バックアップを書き出しました");};
+// Restore complete bundles including manually-added tabs; older backups remain compatible.
+if($("restoreInput"))$("restoreInput").onchange=async e=>{
+  let raw=null;const f=e.target.files?.[0];
+  if(f){try{raw=JSON.parse(await f.text());}catch{}e.target.value="";}
+  if(!raw){alert("復元できるバックアップJSONではありません。");return;}
+  try{
+    if(Array.isArray(raw)){
+      if(!confirm(`${raw.length}件のメールデータに置き換えます。よろしいですか？`))return;
+      mails=raw;
+    }else if(raw?.format==="radio-mail-manager-backup"&&raw.data){
+      if(!confirm("メール・メモ・番組設定・表示設定・ゴミ箱などをバックアップ内容に置き換えます。よろしいですか？"))return;
+      const d=raw.data;
+      mails=Array.isArray(d.mails)?d.mails:[];memoItems=Array.isArray(d.memos)?d.memos:[];programSettings=d.programSettings||{};
+      programOrder=Array.isArray(d.programOrder)?d.programOrder:[];manualProgramTabs=Array.isArray(d.manualProgramTabs)?[...new Set(d.manualProgramTabs.filter(Boolean))]:[];
+      sortModes=d.sortModes||{};appSettings={...appSettings,...(d.appSettings||{})};
+      appSettings.showFields={program:true,episode:true,airDate:true,name:true,corner:true,summary:true,url:true,memo:true,...(appSettings.showFields||{})};
+      selectedView=d.selectedView||"__memo__";trashItems=Array.isArray(d.trash)?d.trash:[];
+      localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));
+      localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));localStorage.setItem(MANUAL_PROGRAM_TABS_KEY,JSON.stringify(manualProgramTabs));
+      localStorage.setItem(SORT_MODES_KEY,JSON.stringify(sortModes));localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));localStorage.setItem("radioMailManager.selectedView",selectedView);
+      if(d.autosave)localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(d.autosave));if(d.theme)applyTheme(d.theme);saveTrash();applyDisplaySettings();
+    }else throw 0;
+    mails=mails.map(x=>({...x,id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",favorite:!!x.favorite,status:x.status||"sent"}));
+    stripLegacyLabels();localStorage.setItem(KEY,JSON.stringify(mails));render();toast("復元しました");
+  }catch{alert("復元できるバックアップJSONではありません。");}
+};
+
+
+// Auto-backup restoration also restores the manual dedicated-tab list.
+const restoreFromBundleV25Base=restoreFromBundle;
+restoreFromBundle=function(raw){
+  if(!(raw?.format==="radio-mail-manager-backup"&&raw.data))return false;
+  manualProgramTabs=Array.isArray(raw.data.manualProgramTabs)?[...new Set(raw.data.manualProgramTabs.filter(Boolean))]:[];
+  localStorage.setItem(MANUAL_PROGRAM_TABS_KEY,JSON.stringify(manualProgramTabs));
+  return restoreFromBundleV25Base(raw);
+};
+
+// Multi-selection now uses a stable bottom action sheet instead of an anchor-positioned popup.
+positionMultiSelectBar=function(){
+  const bar=$("multiSelectBar");if(!bar||bar.hidden)return;
+  bar.classList.remove("multi-select-floating");
+  bar.classList.add("multi-select-sheet");
+  bar.style.left="";bar.style.top="";bar.style.right="";bar.style.bottom="";bar.style.maxWidth="";bar.style.maxHeight="";bar.style.overflowY="";
+};
+const startMultiSelectionV25Base=startMultiSelection;
+startMultiSelection=function(kind,id){startMultiSelectionV25Base(kind,id);positionMultiSelectBar();};
+const toggleMultiSelectionV25Base=toggleMultiSelection;
+toggleMultiSelection=function(id){toggleMultiSelectionV25Base(id);if(multiSelected.size)positionMultiSelectBar();};
+const clearMultiSelectionV25Base=clearMultiSelection;
+clearMultiSelection=function(){clearMultiSelectionV25Base();const bar=$("multiSelectBar");bar?.classList.remove("multi-select-sheet","multi-select-floating");if(bar){bar.style.left="";bar.style.top="";bar.style.right="";bar.style.bottom="";}};
+
+// Include the backup submenu in Android back handling and viewport clamping.
+const radioMailHandleBackV25Base=window.radioMailHandleBack;
+window.radioMailHandleBack=function(){if($("backupMenu")&&!$("backupMenu").hidden){$("backupMenu").hidden=true;return true;}return radioMailHandleBackV25Base?.()||false;};
+new MutationObserver(()=>{const m=$("backupMenu");if(m&&!m.hidden)requestAnimationFrame(()=>{const v=visualBounds();fitFloatingToVisualViewport(m,v.right-(m.offsetWidth||220)-8,v.top+56);});}).observe($("backupMenu"),{attributes:true,attributeFilter:["hidden"]});
+
 render();

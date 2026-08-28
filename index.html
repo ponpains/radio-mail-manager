@@ -10,25 +10,19 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver24">
+  <link rel="stylesheet" href="styles.css?v=ver25">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.24</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.25</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
-    <button id="globalSearchBtn" class="icon-btn" aria-label="横断検索">⌕</button>
+    <button id="globalSearchBtn" class="icon-btn" aria-label="検索">⌕</button>
     <button id="moreBtn" class="icon-btn more-btn" aria-label="その他">⋯</button>
   </div>
   <div id="moreMenu" class="more-menu" hidden>
-    <button id="backupBtn">バックアップ</button>
-    <button id="backupCopyBtn">緊急バックアップをコピー</button>
-    <button id="autoBackupBtn">自動バックアップ</button>
-    <button id="restoreBtn">復元</button>
-    <button id="csvBtn">CSV書出</button>
-    <button id="analysisExportBtn">詳細書き出し</button>
-    <button id="csvImportBtn">CSV読込</button>
+    <button id="backupFolderBtn">バックアップ・その他 <span aria-hidden="true">›</span></button>
     <button id="themeBtn">テーマカラー</button>
     <button id="statsBtn">記録</button>
     <button id="programSettingsBtn">番組設定</button>
@@ -38,6 +32,15 @@
     <input id="csvImportInput" type="file" accept=".csv,text/csv" hidden>
   </div>
 </header>
+<div id="backupMenu" class="context-menu backup-submenu" hidden>
+  <button id="backupBtn">バックアップ</button>
+  <button id="backupCopyBtn">緊急バックアップをコピー</button>
+  <button id="autoBackupBtn">自動バックアップ</button>
+  <button id="restoreBtn">復元</button>
+  <button id="csvBtn">CSV書出</button>
+  <button id="analysisExportBtn">詳細書き出し</button>
+  <button id="csvImportBtn">CSV読込</button>
+</div>
 <div id="programMenu" class="context-menu" hidden>
   <button id="renameProgramBtn">名前の変更</button>
   <button id="deleteProgramBtn" class="danger-menu">削除</button>
@@ -98,13 +101,9 @@
   </section>
 
 <section id="draftView" class="draft-view" hidden>
-  <div class="special-view-toolbar"><button id="draftSearchToggle" class="special-search-toggle" type="button" aria-expanded="false" aria-label="下書きを検索">🔍</button></div>
-  <div id="draftSearchWrap" class="special-search-wrap" hidden><input id="draftSearch" type="search" placeholder="下書きを検索"><button id="draftSearchClose" class="special-search-close" type="button" aria-label="検索を閉じる">×</button></div>
   <div id="draftTimeline" class="draft-timeline"></div>
 </section>
 <section id="memoView" class="memo-view" hidden>
-  <div class="special-view-toolbar"><button id="memoSearchToggle" class="special-search-toggle" type="button" aria-expanded="false" aria-label="メモを検索">🔍</button></div>
-  <div id="memoSearchWrap" class="special-search-wrap" hidden><input id="memoSearch" type="search" placeholder="メモを検索"><button id="memoSearchClose" class="special-search-close" type="button" aria-label="検索を閉じる">×</button></div>
   <div id="memoTimeline" class="memo-timeline"></div>
 </section>
 
@@ -168,6 +167,10 @@
     <button type="button" id="closeProgramSettingsDialog" class="close">×</button>
   </div>
   <div class="program-settings-body">
+    <div class="program-add-row">
+      <input id="newProgramTabName" type="text" placeholder="新しい番組名">
+      <button type="button" id="addProgramTabBtn" class="secondary">専用タブを追加</button>
+    </div>
     <label>番組<select id="programSettingsSelect"></select></label>
     <label>投稿フォームURL<input id="programFormUrl" type="url" placeholder="https://..."></label>
     <label>メールアドレス<input id="programEmail" type="email" placeholder="example@example.com"></label>
@@ -252,9 +255,17 @@
 
 
 <dialog id="globalSearchDialog" class="search-dialog">
-  <div class="dialog-head"><h2>横断検索</h2><button type="button" id="closeGlobalSearchDialog" class="close">×</button></div>
+  <div class="dialog-head"><h2>検索</h2><button type="button" id="closeGlobalSearchDialog" class="close">×</button></div>
   <div class="global-search-body">
-    <input id="globalSearchInput" type="search" placeholder="メモ・下書き・送信済・採用を検索">
+    <div class="global-search-row">
+      <select id="globalSearchScope" aria-label="検索対象">
+        <option value="memo">メモ</option>
+        <option value="draft">下書き</option>
+        <option value="mail">メール</option>
+        <option value="all" selected>横断</option>
+      </select>
+      <input id="globalSearchInput" type="search" placeholder="キーワードを入力">
+    </div>
     <div id="globalSearchResults" class="global-search-results"></div>
   </div>
 </dialog>
@@ -387,6 +398,6 @@
   <button type="button" id="multiCancelBtn" class="secondary">解除</button>
 </div>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver24"></script>
+<script src="app.js?v=ver25"></script>
 </body>
 </html>
