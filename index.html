@@ -4,14 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="メール管理">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver23">
+  <link rel="stylesheet" href="styles.css?v=ver24">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.23</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.24</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="globalSearchBtn" class="icon-btn" aria-label="横断検索">⌕</button>
@@ -19,10 +23,11 @@
   </div>
   <div id="moreMenu" class="more-menu" hidden>
     <button id="backupBtn">バックアップ</button>
+    <button id="backupCopyBtn">緊急バックアップをコピー</button>
     <button id="autoBackupBtn">自動バックアップ</button>
     <button id="restoreBtn">復元</button>
     <button id="csvBtn">CSV書出</button>
-    <button id="analysisExportBtn">分析用に書き出す</button>
+    <button id="analysisExportBtn">詳細書き出し</button>
     <button id="csvImportBtn">CSV読込</button>
     <button id="themeBtn">テーマカラー</button>
     <button id="statsBtn">記録</button>
@@ -93,11 +98,13 @@
   </section>
 
 <section id="draftView" class="draft-view" hidden>
-  <div class="special-search-wrap"><input id="draftSearch" type="search" placeholder="🔍 下書きを検索"></div>
+  <div class="special-view-toolbar"><button id="draftSearchToggle" class="special-search-toggle" type="button" aria-expanded="false" aria-label="下書きを検索">🔍</button></div>
+  <div id="draftSearchWrap" class="special-search-wrap" hidden><input id="draftSearch" type="search" placeholder="下書きを検索"><button id="draftSearchClose" class="special-search-close" type="button" aria-label="検索を閉じる">×</button></div>
   <div id="draftTimeline" class="draft-timeline"></div>
 </section>
 <section id="memoView" class="memo-view" hidden>
-  <div class="special-search-wrap"><input id="memoSearch" type="search" placeholder="🔍 メモを検索"></div>
+  <div class="special-view-toolbar"><button id="memoSearchToggle" class="special-search-toggle" type="button" aria-expanded="false" aria-label="メモを検索">🔍</button></div>
+  <div id="memoSearchWrap" class="special-search-wrap" hidden><input id="memoSearch" type="search" placeholder="メモを検索"><button id="memoSearchClose" class="special-search-close" type="button" aria-label="検索を閉じる">×</button></div>
   <div id="memoTimeline" class="memo-timeline"></div>
 </section>
 
@@ -115,7 +122,7 @@
       <div class="k">放送回</div><div class="detail-gray"><input id="episode" placeholder="放送回"></div>
       <div class="k">放送日</div><div class="detail-gray"><input id="airDate" type="date"></div>
       <div class="k">ラジオネーム</div><div class="detail-gray"><input id="name" list="nameList" placeholder="ラジオネーム"><datalist id="nameList"></datalist></div>
-      <div class="k">コーナー</div><div class="detail-gray corner-quick-row"><input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist><button type="button" id="quickAddCornerBtn" class="corner-quick-add" aria-label="新しいコーナーを追加">＋</button></div>
+      <div class="k">コーナー</div><div class="detail-gray"><input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist></div>
     </div>
 
     <div class="detail-body detail-gray add-mail-body"><strong>メール本文</strong><br><textarea id="body" rows="8" placeholder="メール本文"></textarea></div>
@@ -326,7 +333,7 @@
 
 
 <dialog id="analysisExportDialog" class="compact-dialog">
-  <div class="dialog-head"><h2>分析用に書き出す</h2><button type="button" id="closeAnalysisExportDialog" class="close">×</button></div>
+  <div class="dialog-head"><h2>詳細書き出し</h2><button type="button" id="closeAnalysisExportDialog" class="close">×</button></div>
   <div class="app-settings-body">
     <label>対象
       <select id="analysisStatus">
@@ -380,6 +387,6 @@
   <button type="button" id="multiCancelBtn" class="secondary">解除</button>
 </div>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver23"></script>
+<script src="app.js?v=ver24"></script>
 </body>
 </html>

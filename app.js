@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.23";
+const APP_VERSION="ver.24";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -11,6 +11,7 @@ const AUTOSAVE_KEY="radioMailManager.autosave.v1";
 const OLD_KEYS=["radioMailManager.v2","radioMailManager.v1"];
 let raw=localStorage.getItem(KEY);
 if(!raw){for(const k of OLD_KEYS){if(localStorage.getItem(k)){raw=localStorage.getItem(k);break}}}
+const isFreshInstall=!raw&&!localStorage.getItem(MEMO_KEY)&&!localStorage.getItem(PROGRAM_SETTINGS_KEY);
 let mails=raw?JSON.parse(raw):[];
 let selectedView="__memo__";
 let editingId=null,currentDetailId=null,deferredPrompt=null;
@@ -38,20 +39,30 @@ function applyDisplaySettings(){
 function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
 function episodeNum(s){const m=String(s||"").match(/\d+/);return m?Number(m[0]):999999}
 function save(){localStorage.setItem(KEY,JSON.stringify(mails));render()}
-const completeKerereRows=[["3回", "しゃかかな", "ふつおた", "ラジオ界の帝王"], ["4回", "ななお", "ラジオ猫", "へばにゃん"], ["4回", "しゃかかな", "ラジオ猫", "ラジコ"], ["5回", "ガンバレないわ", "リアクション", "自分の声が聞けない"], ["6回", "しゃかかな", "リアクション", "最初にグーを出す"], ["8回", "ななお", "ふつおた", "ラジオ界のドン"], ["9回", "しゃかかな", "リアクション", "モータウンビート"], ["11回", "ガンバレないわ", "ラジオ猫", "やぎにゃん"], ["11回", "しゃかかな", "共食い", "かまたろう"], ["12回", "ななお", "リアクション", "ラジオの曲SP"], ["12回", "ガンバレないわ", "聞いてけれ", "笑顔中"], ["13回", "しゃかかな", "ラジオ猫", "ディスクユニオン"], ["13回", "ななお", "ハガキ", "絵描き歌"], ["14回", "ななお", "聞いてけれ", "たまご"], ["14回", "ななお", "聞いてけれ", "第一子"], ["15回", "ななお", "共食い", "肉のたかだ"], ["16回", "ななお", "ふつおた", "社会＆文化"], ["16回", "しゃかかな", "リアクション", "永田詩央里まさか"], ["17回", "ななお", "リアクション", "おたがき"], ["17回", "ガンバレないわ", "ラジオ猫", "うまとマハンバー"], ["17回", "しゃかかな", "ラジオ猫", "しおりん"], ["19回", "ななお", "ふつおた", "象拳"], ["19回", "ななお", "ラジオ猫", "アーちゃん"], ["20回", "アンミカの監視下", "ラジオネーム", "アンミカの監視下"], ["21回", "ななお", "リアクション", "出禁宣言"], ["22回", "しゃかかな", "ふつおた", "けれけれ流行語大賞"], ["22回", "ガンバレないわ", "しおり", "黒又山"], ["23回", "ななお", "ふつおた", "radikoマスコット"], ["23回", "しゃかかな", "ラジオ猫", "スポンサー募集中"], ["23回", "ななお", "ラジオ猫", "寿限無"], ["24回", "しゃかかな", "ラジオ猫", "手洗いうがい"], ["24回", "ななお", "しおり", "小坂町のクリスマス"], ["29回", "ななお", "リアクション", "映画館のサブスク"], ["29回", "ななお", "ラジオ猫", "ミルクボーイ"], ["31回", "ななお", "リアクション", "総集編はラブレター"], ["32回", "ななお", "ふつおた", "自炊ニュース"], ["32回", "ななお", "ラジオ猫", "サンタ"], ["33回", "ななお", "ラジオ猫", "未来から来た永田"], ["34回", "ななお", "ハガキ", "ぷるぷるちくわ"], ["34回", "しゃかかな", "聞いてけれ", "フードコート"], ["34回", "しゃかかな", "ふつおた", "さようなまはげ"], ["35回", "ななお", "しおり", "かまくらの権五郎"], ["37回", "ガンバレないわ", "ラジオ猫", "まだラジオ猫にな"], ["37回", "しゃかかな", "ラジオ猫", "豚汁"], ["38回", "ななお", "リアクション", "ギャラクシー賞"], ["38回", "ななお", "聞いてけれ", "自販機のホスピタ"], ["39回", "ななお", "ラジオ猫", "ワタナベ"], ["39回", "ななお", "ラジオ猫", "じゃあ、あんたが"], ["41回", "ななお", "聞いてけれ", "郷ひろみ"], ["42回", "ななお", "ラジオ猫", "こけけ"], ["47回", "しゃかかな", "ラジオ猫", "N〜愛すべき猫がい"], ["50回", "ななお", "リアクション", "エグゾディア"], ["50回", "ななお", "リアクション", "しいたけの擬音"], ["53回", "ななお", "リアクション", "偽の生放送"], ["54回", "ななお", "ふつおた", "1周年"], ["54回", "ななお", "ハガキ", "けれけれすごろく"], ["55回", "ななお", "ラジオ猫", "ハリソン山中"], ["55回", "ななお", "ラジオ猫", "秋田犬"], ["58回", "ななお", "ラジオ猫", "アレクサ"]];
+const FIRST_RUN_KEY="radioMailManager.firstRunGuide.v1";
+if(isFreshInstall&&!localStorage.getItem(FIRST_RUN_KEY)){
+  const now=new Date().toISOString();
+  memoItems=[{
+    id:uid(),createdAt:now,favorite:false,text:`【はじめに：ラジオメールマネージャー】
 
-if(!mails.length){
-  mails=completeKerereRows.map(([episode,name,corner,body])=>({
-    id:uid(),program:"けれけれ",episode,airDate:"",name,corner,body,summary:body,url:"",memo:"",favorite:false,status:"adopted"
-  }));
-}else{
-  const existing=new Set(mails.filter(x=>x.program==="けれけれ").map(x=>[x.episode,x.name,x.corner,x.summary||x.body].join("||")));
-  for(const [episode,name,corner,body] of completeKerereRows){
-    const key=[episode,name,corner,body].join("||");
-    if(!existing.has(key)){
-      mails.push({id:uid(),program:"けれけれ",episode,airDate:"",name,corner,body,summary:body,url:"",memo:"",favorite:false,status:"adopted"});
-    }
-  }
+思いつきを「メモ」→文章にしたら「下書き」→送ったら「送信済み」→読まれたら「採用」と記録していくアプリです。
+
+・＋：そのタブに新しく追加
+・＋を長押し：メモ／下書き／送信済みをすぐ作成
+・一覧を長押し：複数選択してコピー・お気に入り・削除など
+・右上の⌕：メモから採用までまとめて検索
+・メモ／下書き右上の🔍：そのタブだけ検索
+・「…」→番組設定：投稿先URL・メールアドレス・ラジオネーム・コーナーを管理
+・「…」→バックアップ：端末移行用の完全バックアップ
+・「…」→緊急バックアップをコピー：ファイル保存できない時にJSONをクリップボードへ退避
+・「…」→詳細書き出し：投稿・採用記録をCSVで書き出し
+
+番組名は送信済み／採用の追加画面で自由に入力できます。採用メールを登録すると、その番組のタブが自動で作られます。
+
+この案内は普通のメモなので、不要になったら削除して大丈夫です。`
+  }];
+  localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
+  localStorage.setItem(FIRST_RUN_KEY,"1");
 }
 function createdAtFromId(id){
   const raw=String(id||"");
@@ -61,7 +72,7 @@ function createdAtFromId(id){
   const d=new Date(ms);
   return Number.isNaN(d.getTime())?"":d.toISOString();
 }
-mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:(x.name==="ガンバレななお"||x.name==="ガンバレな")?"ガンバレないわ":x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||"",createdAt:x.createdAt||createdAtFromId(x.id)||x.sentAt||"",addedAt:x.addedAt||((x.status==="sent"||x.status==="adopted")?(x.sentAt||x.createdAt||createdAtFromId(x.id)||""):"")}));
+mails=mails.map(x=>({id:x.id||uid(),program:x.program||"不明",episode:(x.episode||"").trim()||"不明",airDate:x.airDate||"",name:x.name||"",corner:x.corner||"",body:x.body||"",summary:x.summary||x.title||x.body||"",url:x.url||x.podcast||"",memo:x.memo||"",favorite:!!x.favorite,status:x.status||"adopted",sentAt:x.sentAt||"",createdAt:x.createdAt||createdAtFromId(x.id)||x.sentAt||"",addedAt:x.addedAt||((x.status==="sent"||x.status==="adopted")?(x.sentAt||x.createdAt||createdAtFromId(x.id)||""):"")}));
 memoItems=memoItems.map(m=>{const {label,labelColor,...rest}=m;return rest;});
 localStorage.setItem(KEY,JSON.stringify(mails));
 function adoptedPrograms(){
@@ -447,7 +458,7 @@ $("detailDeleteBtn").onclick=()=>{
 
 // Swipe between the tabs.
 // Right swipe = previous tab; left swipe = next tab.
-// けれけれ -> right swipe -> 採用メール.
+// Program tab -> right swipe -> adopted view.
 let swipeStartX=0,swipeStartY=0,swipeTracking=false;
 const swipeArea=document.querySelector("main");
 swipeArea.addEventListener("touchstart",e=>{
@@ -1506,8 +1517,8 @@ $("runAnalysisExportBtn").onclick=()=>{
   const lines=[head.map(csvCell).join(",")];
   rows.forEach(x=>lines.push([x.program,x.sentAt||x.addedAt||"",x.adoptedAt||"",x.episode,x.airDate,x.name,x.corner,x.body,x.summary,x.status==="adopted"?"採用":"未採用",String(x.body||"").length].map(csvCell).join(",")));
   const csv="\uFEFF"+lines.join("\r\n");
-  downloadBlob("radio-mail-analysis-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  $("analysisExportDialog").close();toast(`${rows.length}件を分析用CSVに書き出しました`);
+  downloadBlob("radio-mail-detail-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  $("analysisExportDialog").close();toast(`${rows.length}件を詳細CSVに書き出しました`);
 };
 
 // 16) Quietly keep analysis-friendly timestamps and body-length metadata from now on.
@@ -1759,22 +1770,6 @@ $("duplicateDraftMenuBtn").onclick=()=>{
   localStorage.setItem(KEY,JSON.stringify(mails));renderDraftsV23();toast("下書きを複製しました");
 };
 
-// Quick corner creation from the mail add/edit screen.
-$("quickAddCornerBtn")?.addEventListener("click",()=>{
-  const program=$("program").value.trim()||((!String(selectedView).startsWith("__"))?selectedView:"");
-  if(!program){toast("先に番組名を入力してください");$("program").focus();return;}
-  const name=prompt("新しいコーナー名");
-  if(!name||!name.trim())return;
-  const corner=name.trim();
-  const current=programSettings[program]||{};
-  const corners=[...new Set([...(Array.isArray(current.corners)?current.corners:[]),corner])];
-  programSettings[program]={...current,corners};
-  localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));
-  fillDatalists();
-  $("corner").value=corner;
-  $("corner").dispatchEvent(new Event("input",{bubbles:true}));
-  toast("コーナーを追加しました");
-});
 
 // Android exports: always use the native create-document flow. Browser keeps normal downloads.
 downloadBlob=async function(name,blob){
@@ -1830,6 +1825,79 @@ $("autoBackupList")?.addEventListener("click",e=>{
   saveAutoBackup("manual");
   if(restoreFromBundle(entry.bundle)){$("autoBackupDialog").close();toast("自動バックアップから復元しました");}
 });
+
+
+
+// ===== ver.24 adjustments =====
+// Memo/draft search stays hidden until its tab-local search button is pressed.
+function setSpecialSearch(kind,open){
+  const wrap=$(kind+"SearchWrap"),input=$(kind+"Search"),toggle=$(kind+"SearchToggle");
+  if(!wrap||!input||!toggle)return;
+  wrap.hidden=!open;toggle.setAttribute("aria-expanded",String(open));
+  if(open){setTimeout(()=>input.focus(),30);}else{input.value="";kind==="memo"?renderMemosV23():renderDraftsV23();}
+}
+$("memoSearchToggle")?.addEventListener("click",()=>setSpecialSearch("memo",$("memoSearchWrap").hidden));
+$("draftSearchToggle")?.addEventListener("click",()=>setSpecialSearch("draft",$("draftSearchWrap").hidden));
+$("memoSearchClose")?.addEventListener("click",()=>setSpecialSearch("memo",false));
+$("draftSearchClose")?.addEventListener("click",()=>setSpecialSearch("draft",false));
+
+// Emergency complete-backup copy. Android uses its native clipboard bridge; browsers use Clipboard API/fallback.
+async function copyTextReliable(text){
+  try{if(window.AndroidBridge&&typeof window.AndroidBridge.copyText==="function"){window.AndroidBridge.copyText(text);return true;}}catch(e){}
+  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true;}}catch(e){}
+  try{const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;left:-9999px;top:0";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,ta.value.length);const ok=document.execCommand("copy");ta.remove();return !!ok;}catch(e){return false;}
+}
+$("backupCopyBtn")?.addEventListener("click",async()=>{
+  $("moreMenu").hidden=true;
+  const text=JSON.stringify(buildCompleteBundle(),null,2);
+  const ok=await copyTextReliable(text);
+  if(ok)toast("完全バックアップJSONをコピーしました");else alert("コピーできませんでした。通常のバックアップ書き出しをお試しください。");
+});
+
+// Keep all long-press/action menus inside the actual mobile visual viewport.
+function visualBounds(){
+  const vv=window.visualViewport;
+  return vv?{left:vv.offsetLeft,top:vv.offsetTop,width:vv.width,height:vv.height,right:vv.offsetLeft+vv.width,bottom:vv.offsetTop+vv.height}:{left:0,top:0,width:window.innerWidth,height:window.innerHeight,right:window.innerWidth,bottom:window.innerHeight};
+}
+function fitFloatingToVisualViewport(el,left,top){
+  if(!el)return;
+  const v=visualBounds(),gap=8;
+  el.style.maxWidth=Math.max(120,v.width-gap*2)+"px";
+  el.style.maxHeight=Math.max(100,v.height-gap*2)+"px";
+  el.style.overflowY="auto";
+  el.style.right="auto";el.style.bottom="auto";
+  el.style.left=Math.max(v.left+gap,left)+"px";el.style.top=Math.max(v.top+gap,top)+"px";
+  requestAnimationFrame(()=>{
+    const r=el.getBoundingClientRect();
+    const x=Math.max(v.left+gap,Math.min(r.left,v.right-r.width-gap));
+    const y=Math.max(v.top+gap,Math.min(r.top,v.bottom-r.height-gap));
+    el.style.left=x+"px";el.style.top=y+"px";
+  });
+}
+clampFloatingMenu=function(menu,left,top){fitFloatingToVisualViewport(menu,left,top);};
+positionMultiSelectBar=function(anchor){
+  const bar=$("multiSelectBar");if(!bar||bar.hidden)return;bar.classList.add("multi-select-floating");
+  requestAnimationFrame(()=>{
+    const v=visualBounds(),r=anchor?.getBoundingClientRect?.(),gap=8;
+    bar.style.maxWidth=Math.max(120,v.width-gap*2)+"px";bar.style.maxHeight=Math.max(100,v.height-gap*2)+"px";bar.style.overflowY="auto";
+    const w=Math.min(bar.offsetWidth||300,v.width-gap*2),h=Math.min(bar.offsetHeight||140,v.height-gap*2);
+    let left=r?(r.left+r.width/2-w/2):(v.left+(v.width-w)/2);
+    let top=r?(r.bottom+7):(v.top+(v.height-h)/2);
+    if(top+h>v.bottom-gap&&r)top=r.top-h-7;
+    fitFloatingToVisualViewport(bar,left,top);
+  });
+};
+function reclampOpenFloatingMenus(){
+  for(const id of ["programMenu","memoMenu","draftMenu","sortMenu","moreMenu","quickAddMenu"]){const m=$(id);if(m&&!m.hidden){const r=m.getBoundingClientRect();fitFloatingToVisualViewport(m,r.left,r.top);}}
+  if(multiSelected?.size)positionMultiSelectBar(multiLastAnchor);
+}
+window.visualViewport?.addEventListener("resize",reclampOpenFloatingMenus);
+window.visualViewport?.addEventListener("scroll",reclampOpenFloatingMenus);
+window.addEventListener("orientationchange",()=>setTimeout(reclampOpenFloatingMenus,80));
+for(const id of ["programMenu","memoMenu","draftMenu","sortMenu","moreMenu","quickAddMenu"]){
+  const menu=$(id);if(!menu)continue;
+  new MutationObserver(()=>{if(!menu.hidden)requestAnimationFrame(()=>{const r=menu.getBoundingClientRect();fitFloatingToVisualViewport(menu,r.left,r.top);});}).observe(menu,{attributes:true,attributeFilter:["hidden"]});
+}
 
 // Create at most one automatic generation per calendar day when the app starts.
 setTimeout(maybeDailyAutoBackup,500);
