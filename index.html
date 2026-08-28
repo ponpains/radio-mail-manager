@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver17">
+  <link rel="stylesheet" href="styles.css?v=ver23">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.17</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.23</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="globalSearchBtn" class="icon-btn" aria-label="横断検索">⌕</button>
@@ -19,8 +19,10 @@
   </div>
   <div id="moreMenu" class="more-menu" hidden>
     <button id="backupBtn">バックアップ</button>
+    <button id="autoBackupBtn">自動バックアップ</button>
     <button id="restoreBtn">復元</button>
     <button id="csvBtn">CSV書出</button>
+    <button id="analysisExportBtn">分析用に書き出す</button>
     <button id="csvImportBtn">CSV読込</button>
     <button id="themeBtn">テーマカラー</button>
     <button id="statsBtn">記録</button>
@@ -90,8 +92,12 @@
     </table>
   </section>
 
-<section id="draftView" class="draft-view" hidden><div id="draftTimeline" class="draft-timeline"></div></section>
+<section id="draftView" class="draft-view" hidden>
+  <div class="special-search-wrap"><input id="draftSearch" type="search" placeholder="🔍 下書きを検索"></div>
+  <div id="draftTimeline" class="draft-timeline"></div>
+</section>
 <section id="memoView" class="memo-view" hidden>
+  <div class="special-search-wrap"><input id="memoSearch" type="search" placeholder="🔍 メモを検索"></div>
   <div id="memoTimeline" class="memo-timeline"></div>
 </section>
 
@@ -109,7 +115,7 @@
       <div class="k">放送回</div><div class="detail-gray"><input id="episode" placeholder="放送回"></div>
       <div class="k">放送日</div><div class="detail-gray"><input id="airDate" type="date"></div>
       <div class="k">ラジオネーム</div><div class="detail-gray"><input id="name" list="nameList" placeholder="ラジオネーム"><datalist id="nameList"></datalist></div>
-      <div class="k">コーナー</div><div class="detail-gray"><input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist></div>
+      <div class="k">コーナー</div><div class="detail-gray corner-quick-row"><input id="corner" list="cornerList" placeholder="コーナー"><datalist id="cornerList"></datalist><button type="button" id="quickAddCornerBtn" class="corner-quick-add" aria-label="新しいコーナーを追加">＋</button></div>
     </div>
 
     <div class="detail-body detail-gray add-mail-body"><strong>メール本文</strong><br><textarea id="body" rows="8" placeholder="メール本文"></textarea></div>
@@ -137,6 +143,8 @@
   </div>
   <div id="detailContent"></div>
   <div class="detail-actions">
+    <button id="detailPrevBtn" class="secondary detail-nav-btn" aria-label="前のメール">‹</button>
+    <button id="detailNextBtn" class="secondary detail-nav-btn" aria-label="次のメール">›</button>
     <button id="copyBodyBtn" class="secondary">本文コピー</button>
     <button id="detailEditBtn" class="secondary">編集</button>
     <button id="detailDeleteBtn" class="danger">削除</button>
@@ -184,6 +192,11 @@
         <option value="small">小</option><option value="medium">中</option><option value="large">大</option>
       </select>
     </label>
+    <label>追加ボタンのサイズ
+      <select id="fabSizeSetting">
+        <option value="small">小</option><option value="medium">中</option><option value="large">大</option>
+      </select>
+    </label>
     <label>一覧の高さ
       <select id="rowSizeSetting">
         <option value="compact">コンパクト</option><option value="medium">標準</option><option value="large">ゆったり</option>
@@ -192,6 +205,11 @@
     <label>詳細情報欄
       <select id="detailDensitySetting">
         <option value="compact">コンパクト</option><option value="medium">標準</option><option value="large">ゆったり</option>
+      </select>
+    </label>
+    <label>一覧の「本文」表示
+      <select id="listTextSourceSetting">
+        <option value="body">本文</option><option value="summary">要約</option>
       </select>
     </label>
     <fieldset class="display-fields-setting"><legend>詳細画面の表示項目</legend>
@@ -263,7 +281,12 @@
   </div>
 </dialog>
 
-<button id="fabAddBtn" class="fab-add" aria-label="メールを追加">＋</button>
+<button id="fabAddBtn" class="fab-add" aria-label="追加">＋</button>
+<div id="quickAddMenu" class="context-menu quick-add-menu" hidden>
+  <button type="button" data-quick-add="memo">メモ</button>
+  <button type="button" data-quick-add="draft">下書き</button>
+  <button type="button" data-quick-add="sent">送信済</button>
+</div>
 
 <dialog id="memoDialog">
   <div class="dialog-head">
@@ -301,12 +324,62 @@
   <div class="composer-footer"><span id="composerCount">0 / 1000</span></div>
 </dialog>
 
+
+<dialog id="analysisExportDialog" class="compact-dialog">
+  <div class="dialog-head"><h2>分析用に書き出す</h2><button type="button" id="closeAnalysisExportDialog" class="close">×</button></div>
+  <div class="app-settings-body">
+    <label>対象
+      <select id="analysisStatus">
+        <option value="all">すべて</option>
+        <option value="adopted">採用のみ</option>
+        <option value="notAdopted">未採用のみ</option>
+      </select>
+    </label>
+    <label>番組<select id="analysisProgram"><option value="">すべて</option></select></label>
+    <label>期間
+      <select id="analysisPeriod">
+        <option value="all">すべて</option>
+        <option value="year">今年</option>
+        <option value="30days">過去30日</option>
+        <option value="custom">指定</option>
+      </select>
+    </label>
+    <div id="analysisCustomPeriod" class="stats-custom-period" hidden>
+      <label>開始日<input id="analysisFrom" type="date"></label>
+      <label>終了日<input id="analysisTo" type="date"></label>
+    </div>
+    <div class="program-settings-actions">
+      <button type="button" id="cancelAnalysisExportBtn" class="secondary">閉じる</button>
+      <button type="button" id="runAnalysisExportBtn" class="primary">CSVを書き出す</button>
+    </div>
+  </div>
+</dialog>
+
+
+<dialog id="autoBackupDialog" class="compact-dialog auto-backup-dialog">
+  <div class="dialog-head"><h2>自動バックアップ</h2><button type="button" id="closeAutoBackupDialog" class="close">×</button></div>
+  <div class="auto-backup-body">
+    <p class="auto-backup-note">端末内に最新5世代を保存します。アプリ起動時に1日1回、自動で世代を作成します。</p>
+    <div class="auto-backup-toolbar"><span id="autoBackupCount">0 / 5世代</span><button type="button" id="createAutoBackupBtn" class="secondary">今すぐ作成</button></div>
+    <div id="autoBackupList" class="auto-backup-list"></div>
+  </div>
+</dialog>
+
 <dialog id="trashDialog" class="compact-dialog trash-dialog">
   <div class="dialog-head"><h2>ゴミ箱</h2><button type="button" id="closeTrashDialog" class="close">×</button></div>
   <div class="trash-toolbar"><span id="trashCount">0件</span><button type="button" id="emptyTrashBtn" class="danger">ゴミ箱を空にする</button></div>
   <div id="trashList" class="trash-list"></div>
 </dialog>
+
+<div id="multiSelectBar" class="multi-select-bar" hidden aria-live="polite">
+  <span id="multiSelectCount">0件選択</span>
+  <button type="button" id="multiCopyBtn" class="secondary">コピー</button>
+  <button type="button" id="multiFavoriteBtn" class="secondary">お気に入り</button>
+  <button type="button" id="multiAdoptBtn" class="secondary">採用</button>
+  <button type="button" id="multiDeleteBtn" class="danger">削除</button>
+  <button type="button" id="multiCancelBtn" class="secondary">解除</button>
+</div>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver17"></script>
+<script src="app.js?v=ver23"></script>
 </body>
 </html>

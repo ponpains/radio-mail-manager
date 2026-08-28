@@ -1210,3 +1210,92 @@ html[data-detail-density="large"] #detailDialog .detail-pair-row .detail-gray{mi
 
 /* Favorite marker in memo/draft lists: stays beside the character count. */
 .list-favorite-star{color:#d49b00;font-size:.95em;font-weight:700;vertical-align:baseline;}
+
+/* ===== ver.18 Android shell fixes are handled natively in MainActivity. ===== */
+
+
+/* ===== ver.19 ===== */
+.body-char-count{font-size:11px;font-weight:500;color:#888;margin-left:6px;white-space:nowrap;}
+
+/* Reorder mode must never trigger Android/WebView text selection. */
+.program-tabs.reorder-mode,.program-tabs.reorder-mode *{
+  -webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;
+}
+.program-tabs.reorder-mode .program-tab:not([data-view^="__"]){touch-action:none!important;cursor:grab;}
+.program-tabs.reorder-mode .program-tab.dragging{cursor:grabbing;box-shadow:0 3px 12px rgba(0,0,0,.16);}
+
+/* Long-press multi selection. */
+.memo-card,.draft-card,#mailTable tr{-webkit-touch-callout:none;}
+body.multi-select-mode .memo-card,body.multi-select-mode .draft-card,body.multi-select-mode #mailTable tr{-webkit-user-select:none;user-select:none;}
+.memo-card.multi-selected,.draft-card.multi-selected,#mailTable tr.multi-selected{background:var(--accent-soft)!important;box-shadow:inset 3px 0 0 var(--accent);}
+.multi-select-bar{
+  position:fixed;z-index:1200;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);
+  display:flex;align-items:center;gap:6px;max-width:calc(100vw - 20px);padding:8px 10px;border:1px solid #ddd;border-radius:14px;
+  background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.18);white-space:nowrap;
+}
+.multi-select-bar[hidden]{display:none!important;}
+.multi-select-bar>span{font-size:11px;color:#666;margin-right:2px;}
+.multi-select-bar button{min-width:0;padding:7px 9px;font-size:11px;white-space:nowrap;}
+/* Lists are action surfaces; disable native text selection so long-press reliably enters selection mode. */
+.memo-card,.draft-card,#mailTable tr{-webkit-user-select:none!important;user-select:none!important;}
+
+/* ===== ver.20 ===== */
+.quick-add-menu{position:fixed;right:16px;bottom:84px;z-index:1200;min-width:128px}
+.detail-nav-btn{min-width:38px;padding-left:10px;padding-right:10px;font-size:20px;line-height:1}
+#multiAdoptBtn[hidden]{display:none!important}
+
+/* ===== ver.21 ===== */
+.fab-add[data-size="small"]{width:52px;height:52px;font-size:30px}
+.fab-add[data-size="medium"]{width:64px;height:64px;font-size:36px}
+.fab-add[data-size="large"]{width:76px;height:76px;font-size:42px}
+.multi-select-bar.multi-select-floating{
+  position:fixed;left:12px;right:auto;bottom:auto;z-index:1500;
+  width:min(360px,calc(100vw - 24px));padding:14px 12px;
+  border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.20);
+  display:flex;flex-wrap:wrap;gap:9px;align-items:center;
+}
+.multi-select-bar.multi-select-floating #multiSelectCount{flex-basis:100%;font-weight:700}
+.multi-select-bar.multi-select-floating button{min-height:44px;padding:9px 13px;font-size:14px;flex:1 1 auto}
+
+/* ===== ver.22 ===== */
+.multi-select-bar.multi-select-floating{
+  width:min(300px,calc(100vw - 20px));
+  max-width:calc(100vw - 20px);
+  padding:10px;
+  border-radius:13px;
+  gap:7px;
+  box-sizing:border-box;
+}
+.multi-select-bar.multi-select-floating button{
+  min-height:38px;padding:7px 10px;font-size:13px;
+}
+.multi-select-bar.multi-select-floating #multiSelectCount{font-size:13px}
+
+/* All contextual menus must stay inside the viewport. */
+.context-menu{
+  max-width:calc(100vw - 16px);
+  box-sizing:border-box;
+}
+#programMenu,#memoMenu,#draftMenu,#sortMenu,#moreMenu,#quickAddMenu{
+  position:fixed;
+  z-index:1600;
+}
+
+
+/* ===== ver.23 ===== */
+.special-search-wrap{position:sticky;top:0;z-index:12;padding:8px 12px;background:#fff;border-bottom:1px solid #ececec}
+.special-search-wrap input{width:100%;box-sizing:border-box;border:1px solid #d8d8d8;border-radius:10px;padding:9px 11px;font:inherit;background:#f7f7f7}
+.special-search-wrap input:focus{outline:2px solid var(--accent);background:#fff}
+.special-search-empty{padding:28px 16px;text-align:center;color:#888;font-size:13px}
+.corner-quick-row{display:flex!important;align-items:center;gap:7px}
+.corner-quick-row input{flex:1;min-width:0}
+.corner-quick-add{flex:0 0 34px;width:34px;height:34px;border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:21px;line-height:1;padding:0}
+.auto-backup-body{padding:12px 14px 16px}
+.auto-backup-note{margin:0 0 12px;color:#666;font-size:12px;line-height:1.55}
+.auto-backup-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:12px;color:#666}
+.auto-backup-list{display:grid;gap:8px;max-height:52vh;overflow:auto}
+.auto-backup-item{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;border:1px solid #e1e1e1;border-radius:10px;padding:10px;background:#fafafa}
+.auto-backup-item strong{font-size:13px;font-weight:600}
+.auto-backup-item span{font-size:11px;color:#777}
+.auto-backup-item button{grid-column:2;grid-row:1 / span 2;min-height:34px}
+.draft-updated-label{white-space:nowrap}

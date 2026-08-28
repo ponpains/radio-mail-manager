@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.17";
+const APP_VERSION="ver.23";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -16,7 +16,7 @@ let selectedView="__memo__";
 let editingId=null,currentDetailId=null,deferredPrompt=null;
 let favoriteOnly=false;
 let sortModes=JSON.parse(localStorage.getItem(SORT_MODES_KEY)||"{}");
-let appSettings={fontSize:"medium",tabSize:"medium",rowSize:"medium",detailDensity:"compact",showFields:{program:true,episode:true,airDate:true,name:true,corner:true,summary:true,url:true,memo:true},...JSON.parse(localStorage.getItem(APP_SETTINGS_KEY)||"{}")};
+let appSettings={fontSize:"medium",tabSize:"medium",rowSize:"medium",detailDensity:"compact",listTextSource:"body",showFields:{program:true,episode:true,airDate:true,name:true,corner:true,summary:true,url:true,memo:true},...JSON.parse(localStorage.getItem(APP_SETTINGS_KEY)||"{}")};
 appSettings.showFields={program:true,episode:true,airDate:true,name:true,corner:true,summary:true,url:true,memo:true,...(appSettings.showFields||{})};
 let memoItems=JSON.parse(localStorage.getItem(MEMO_KEY)||"[]");
 let programSettings=JSON.parse(localStorage.getItem(PROGRAM_SETTINGS_KEY)||"{}");
@@ -165,30 +165,41 @@ $("programTabs").addEventListener("pointerdown",e=>{
   if(!reorderMode)return;
   const btn=e.target.closest('.program-tab[data-view]');
   if(!btn||String(btn.dataset.view).startsWith("__"))return;
-  const startX=e.clientX,startY=e.clientY,pointerId=e.pointerId;
-  const timer=setTimeout(()=>{
-    reorderDrag={btn,pointerId};btn.classList.add("dragging");btn.setPointerCapture?.(pointerId);
-  },450);
-  const cancel=()=>clearTimeout(timer);
+  e.preventDefault();
+  suppressTabClick=true;
+  const pointerId=e.pointerId;
+  reorderDrag={btn,pointerId};
+  btn.classList.add("dragging");
+  try{btn.setPointerCapture?.(pointerId);}catch{}
   const move=ev=>{
-    if(!reorderDrag){if(Math.hypot(ev.clientX-startX,ev.clientY-startY)>8)cancel();return;}
-    if(reorderDrag.pointerId!==ev.pointerId)return;
+    if(!reorderDrag||reorderDrag.pointerId!==ev.pointerId)return;
     ev.preventDefault();
     const target=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.program-tab[data-view]');
     if(!target||target===btn||String(target.dataset.view).startsWith("__"))return;
     const a=programOrder.indexOf(btn.dataset.view),b=programOrder.indexOf(target.dataset.view);
-    if(a<0||b<0)return;
+    if(a<0||b<0||a===b)return;
     programOrder.splice(a,1);programOrder.splice(b,0,btn.dataset.view);
     localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));
-    programOrder.forEach(name=>{const el=[...$("programTabs").querySelectorAll('.program-tab[data-view]')].find(x=>x.dataset.view===name);if(el)$("programTabs").appendChild(el);});
+    const fixed=[...$("programTabs").querySelectorAll('.program-tab[data-view^="__"]')];
+    const movable=new Map([...$("programTabs").querySelectorAll('.program-tab[data-view]:not([data-view^="__"])')].map(el=>[el.dataset.view,el]));
+    fixed.forEach(el=>$("programTabs").appendChild(el));
+    programOrder.forEach(name=>{const el=movable.get(name);if(el)$("programTabs").appendChild(el);});
   };
   const up=ev=>{
-    cancel();
-    if(reorderDrag&&reorderDrag.pointerId===ev.pointerId){reorderDrag.btn?.classList.remove("dragging");reorderDrag=null;toast("並び順を保存しました");}
-    document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);document.removeEventListener("pointercancel",up);
+    if(!reorderDrag||reorderDrag.pointerId!==ev.pointerId)return;
+    ev.preventDefault();
+    reorderDrag.btn?.classList.remove("dragging");
+    try{reorderDrag.btn?.releasePointerCapture?.(ev.pointerId);}catch{}
+    reorderDrag=null;
+    document.removeEventListener("pointermove",move,true);
+    document.removeEventListener("pointerup",up,true);
+    document.removeEventListener("pointercancel",up,true);
+    toast("並び順を保存しました");
   };
-  document.addEventListener("pointermove",move,{passive:false});document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);
-});
+  document.addEventListener("pointermove",move,{capture:true,passive:false});
+  document.addEventListener("pointerup",up,{capture:true,passive:false});
+  document.addEventListener("pointercancel",up,{capture:true,passive:false});
+},{passive:false});
 $("programTabs").addEventListener("dblclick",()=>{if(reorderMode)exitProgramReorderMode();});
 
 document.addEventListener("click",e=>{
@@ -308,7 +319,7 @@ function resetForm(){editingId=null;$("dialogTitle").textContent=selectedView===
 function openEditor(id=null){resetForm();editingId=id;if(id){const x=mails.find(m=>m.id===id);$("dialogTitle").textContent="メールを編集";$("deleteBtn").hidden=false;["program","episode","airDate","name","corner","body","summary","url","memo"].forEach(k=>$(k).value=x[k]??"")}$("editDialog").showModal()}
 $("addBtn").onclick=()=>{if(selectedView==="__draft__")openDraftComposer();else openEditor();};$("cancelBtn").onclick=()=>$("editDialog").close();$("closeDialog").onclick=()=>$("editDialog").close();
 $("deleteBtn").onclick=()=>{if(editingId&&confirm("このメールを削除しますか？")){mails=mails.filter(x=>x.id!==editingId);save();$("editDialog").close();toast("削除しました")}};
-$("mailForm").addEventListener("submit",e=>{e.preventDefault();const old=editingId?mails.find(m=>m.id===editingId):null;const status=old?.status||(selectedView==="__draft__"?"draft":selectedView==="__sent__"?"sent":"adopted");const now=new Date().toISOString();const x={id:editingId||uid(),program:$("program").value.trim()||"不明",episode:$("episode").value.trim()||"不明",airDate:$("airDate").value,name:$("name").value.trim(),corner:$("corner").value.trim(),body:$("body").value,summary:$("summary").value.trim(),url:$("url").value.trim(),memo:$("memo").value,label:$("mailLabel")?.value.trim()||"",labelColor:$("mailLabelColor")?.value||"yellow",favorite:old?.favorite||false,status,sentAt:(status==="sent"&&!old?.sentAt)?now:(old?.sentAt||""),createdAt:old?.createdAt||now,addedAt:old?.addedAt||((status==="sent"||status==="adopted")?now:"")};if(editingId)mails=mails.map(m=>m.id===editingId?x:m);else mails.push(x);localStorage.setItem(KEY,JSON.stringify(mails));if(typeof setAutosavePart==="function")setAutosavePart("mail",null);render();$("editDialog").close();toast(editingId?"更新しました":"追加しました")});
+$("mailForm").addEventListener("submit",e=>{e.preventDefault();const old=editingId?mails.find(m=>m.id===editingId):null;const status=old?.status||(selectedView==="__draft__"?"draft":selectedView==="__sent__"?"sent":"adopted");const now=new Date().toISOString();const x={id:editingId||uid(),program:$("program").value.trim()||"不明",episode:$("episode").value.trim()||"不明",airDate:$("airDate").value,name:$("name").value.trim(),corner:$("corner").value.trim(),body:$("body").value,summary:$("summary").value.trim(),url:$("url").value.trim(),memo:$("memo").value,label:$("mailLabel")?.value.trim()||"",labelColor:$("mailLabelColor")?.value||"yellow",favorite:old?.favorite||false,status,sentAt:(status==="sent"&&!old?.sentAt)?now:(old?.sentAt||""),createdAt:old?.createdAt||now,addedAt:old?.addedAt||((status==="sent"||status==="adopted")?now:""),adoptedAt:old?.adoptedAt||((status==="adopted")?now:""),bodyLength:String($("body").value||"").length};if(editingId)mails=mails.map(m=>m.id===editingId?x:m);else mails.push(x);localStorage.setItem(KEY,JSON.stringify(mails));if(typeof setAutosavePart==="function")setAutosavePart("mail",null);render();$("editDialog").close();toast(editingId?"更新しました":"追加しました")});
 function safeHttpUrl(url){
   const v=String(url||"").trim();
   if(!v)return "";
@@ -1173,7 +1184,7 @@ bindBackdropCloseToAllDialogs();
 render();
 
 
-// ===== ver.17 adjustments =====
+// ===== ver.18 adjustments =====
 // Draft radio-name/corner fields are intentionally hidden, but the stored values are preserved
 // so the ver.16 layout can be restored without losing old draft metadata.
 
@@ -1214,7 +1225,7 @@ $("memoFavoriteBtn").onclick=()=>{
 // Existing save/autosave handlers already mutate only text and preserve unknown fields.
 
 // Draft composer: metadata fields remain in the DOM/data model for rollback compatibility,
-// but are hidden from the user in ver.17.
+// but are hidden from the user in ver.18.
 const openDraftComposerV17Base=openDraftComposer;
 openDraftComposer=function(id=null){
   openDraftComposerV17Base(id);
@@ -1244,3 +1255,583 @@ $("detailDialog").addEventListener("close",()=>$("detailDialog").classList.remov
 memoItems=memoItems.map(m=>({...m,favorite:!!m.favorite}));
 localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));
 renderMemos();
+
+
+// ===== ver.19 adjustments =====
+// Mail detail shows a live character count next to the body heading.
+const openDetailV19Base=openDetail;
+openDetail=function(id){
+  openDetailV19Base(id);
+  const x=mails.find(m=>m.id===id);if(!x||x.status==="draft")return;
+  const section=$("detailContent")?.querySelector(".mail-body-section");
+  const heading=section?.querySelector("strong");
+  const body=section?.querySelector('[data-key="body"]');
+  if(heading){
+    heading.innerHTML=`本文 <span class="body-char-count">${String(x.body||"").length}文字</span>`;
+    body?.addEventListener("input",()=>{heading.innerHTML=`本文 <span class="body-char-count">${String(body.innerText||"").length}文字</span>`;});
+  }
+};
+
+// The final list column can show either the full body or the saved summary.
+appSettings.listTextSource=appSettings.listTextSource||"body";
+const renderV19Base=render;
+render=function(){
+  renderV19Base();
+  if(selectedView!=="__memo__"&&selectedView!=="__draft__"){
+    const rows=filtered();
+    document.querySelectorAll("#mailTable tr[data-id]").forEach((tr,i)=>{
+      const x=rows[i];if(!x)return;
+      const last=tr.querySelector("td:last-child .fit-text");
+      if(last)last.textContent=(appSettings.listTextSource==="summary"?(x.summary||"—"):(x.body||"—"));
+    });
+    requestAnimationFrame(fitAllText);
+  }
+  markMultiSelected();
+};
+
+const loadSettingsFormV19Base=loadSettingsForm;
+loadSettingsForm=function(){
+  loadSettingsFormV19Base();
+  if($("listTextSourceSetting"))$("listTextSourceSetting").value=appSettings.listTextSource||"body";
+};
+$("saveSettingsBtn").onclick=()=>{
+  const sf={};[["program","Program"],["episode","Episode"],["airDate","AirDate"],["name","Name"],["corner","Corner"],["summary","Summary"],["url","Url"],["memo","Memo"]].forEach(([k,n])=>sf[k]=$("show"+n+"Setting").checked);
+  appSettings={...appSettings,fontSize:$("fontSizeSetting").value,tabSize:$("tabSizeSetting").value,rowSize:$("rowSizeSetting").value,detailDensity:$("detailDensitySetting").value,listTextSource:$("listTextSourceSetting").value||"body",showFields:sf};
+  localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));applyDisplaySettings();$("settingsDialog").close();render();toast("設定を保存しました");
+};
+$("resetSettingsBtn").onclick=()=>{
+  appSettings={fontSize:"medium",tabSize:"medium",rowSize:"medium",detailDensity:"compact",listTextSource:"body",showFields:{program:true,episode:true,airDate:true,name:true,corner:true,summary:true,url:true,memo:true}};
+  localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));applyDisplaySettings();loadSettingsForm();render();toast("設定を初期値に戻しました");
+};
+
+// Program reorder mode is explicitly a drag mode. Disable text selection/callouts and drag immediately.
+const enterProgramReorderModeV19Base=enterProgramReorderMode;
+enterProgramReorderMode=function(){
+  enterProgramReorderModeV19Base();
+  document.getSelection?.().removeAllRanges?.();
+  toast("番組タブをそのままドラッグして移動できます");
+};
+$("reorderProgramBtn").onclick=enterProgramReorderMode;
+
+// Long-press multi-selection for every list type.
+let multiSelectKind=null;
+let multiSelected=new Set();
+let multiSuppressClickUntil=0;
+function activeMultiKind(){return selectedView==="__memo__"?"memo":selectedView==="__draft__"?"draft":"mail";}
+function itemTextForMulti(kind,id){
+  if(kind==="memo")return memoItems.find(x=>x.id===id)?.text||"";
+  return mails.find(x=>x.id===id)?.body||"";
+}
+function itemFavoriteForMulti(kind,id){return kind==="memo"?!!memoItems.find(x=>x.id===id)?.favorite:!!mails.find(x=>x.id===id)?.favorite;}
+function setItemFavoriteForMulti(kind,id,value){const x=kind==="memo"?memoItems.find(x=>x.id===id):mails.find(x=>x.id===id);if(x)x.favorite=value;}
+function selectionElement(id){
+  const escId=(globalThis.CSS&&CSS.escape)?CSS.escape(String(id)):String(id).replace(/["\\]/g,"\\$&");
+  if(multiSelectKind==="memo")return document.querySelector(`#memoTimeline .memo-card[data-id="${escId}"]`);
+  if(multiSelectKind==="draft")return document.querySelector(`#draftTimeline .draft-card[data-id="${escId}"]`);
+  return document.querySelector(`#mailTable tr[data-id="${escId}"]`);
+}
+function markMultiSelected(){
+  document.querySelectorAll(".multi-selected").forEach(el=>el.classList.remove("multi-selected"));
+  multiSelected.forEach(id=>selectionElement(id)?.classList.add("multi-selected"));
+  updateMultiBar();
+}
+function updateMultiBar(){
+  const bar=$("multiSelectBar");if(!bar)return;
+  const n=multiSelected.size;bar.hidden=!n;$("multiSelectCount").textContent=`${n}件選択`;
+  if(n){const allFav=[...multiSelected].every(id=>itemFavoriteForMulti(multiSelectKind,id));$("multiFavoriteBtn").textContent=allFav?"お気に入り解除":"お気に入り";}
+}
+function clearMultiSelection(){multiSelected.clear();multiSelectKind=null;document.body.classList.remove("multi-select-mode");markMultiSelected();}
+function startMultiSelection(kind,id){
+  if(reorderMode)return;
+  multiSelectKind=kind;multiSelected.clear();multiSelected.add(id);multiSuppressClickUntil=Date.now()+650;document.body.classList.add("multi-select-mode");document.getSelection?.().removeAllRanges?.();markMultiSelected();
+}
+function toggleMultiSelection(id){if(multiSelected.has(id))multiSelected.delete(id);else multiSelected.add(id);if(!multiSelected.size){clearMultiSelection();return;}markMultiSelected();}
+function bindLongPressSelection(container,selector,kind){
+  if(!container||container.dataset.multiBound)return;container.dataset.multiBound="1";
+  let timer=null,startX=0,startY=0,targetId=null;
+  const cancel=()=>{clearTimeout(timer);timer=null;targetId=null;};
+  container.addEventListener("pointerdown",e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    const item=e.target.closest(selector);if(!item||e.target.closest("button"))return;
+    startX=e.clientX;startY=e.clientY;targetId=item.dataset.id;clearTimeout(timer);
+    timer=setTimeout(()=>{if(targetId)startMultiSelection(kind,targetId);timer=null;},520);
+  },{passive:true});
+  container.addEventListener("pointermove",e=>{if(timer&&Math.hypot(e.clientX-startX,e.clientY-startY)>9)cancel();},{passive:true});
+  container.addEventListener("pointerup",cancel,{passive:true});container.addEventListener("pointercancel",cancel,{passive:true});
+  container.addEventListener("contextmenu",e=>{if(e.target.closest(selector))e.preventDefault();});
+}
+bindLongPressSelection($("memoTimeline"),".memo-card","memo");
+bindLongPressSelection($("draftTimeline"),".draft-card","draft");
+bindLongPressSelection($("mailTable"),"tr[data-id]","mail");
+
+document.addEventListener("click",e=>{
+  if(!multiSelected.size)return;
+  if(e.target.closest("#multiSelectBar"))return;
+  let item=null;
+  if(multiSelectKind==="memo")item=e.target.closest("#memoTimeline .memo-card[data-id]");
+  else if(multiSelectKind==="draft")item=e.target.closest("#draftTimeline .draft-card[data-id]");
+  else item=e.target.closest("#mailTable tr[data-id]");
+  if(!item)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+  if(Date.now()<multiSuppressClickUntil)return;
+  toggleMultiSelection(item.dataset.id);
+},true);
+
+$("multiCancelBtn").onclick=clearMultiSelection;
+$("multiCopyBtn").onclick=async()=>{
+  const text=[...multiSelected].map(id=>itemTextForMulti(multiSelectKind,id)).filter(Boolean).join("\n\n");
+  if(!text)return;
+  try{await navigator.clipboard.writeText(text);}catch{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();}
+  toast(`${multiSelected.size}件をコピーしました`);
+};
+$("multiFavoriteBtn").onclick=()=>{
+  const allFav=[...multiSelected].every(id=>itemFavoriteForMulti(multiSelectKind,id));
+  [...multiSelected].forEach(id=>setItemFavoriteForMulti(multiSelectKind,id,!allFav));
+  if(multiSelectKind==="memo")localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));else localStorage.setItem(KEY,JSON.stringify(mails));
+  if(multiSelectKind==="memo")renderMemos();else if(multiSelectKind==="draft")renderDrafts();else render();
+  toast(allFav?"お気に入りを解除しました":"お気に入りに追加しました");clearMultiSelection();
+};
+$("multiDeleteBtn").onclick=()=>{
+  const ids=[...multiSelected];if(!ids.length)return;
+  if(!confirm(`${ids.length}件をゴミ箱に移動しますか？`))return;
+  if(multiSelectKind==="memo")ids.forEach(moveMemoToTrash);else ids.forEach(moveMailToTrash);
+  clearMultiSelection();render();toast(`${ids.length}件をゴミ箱に移動しました`);
+};
+
+// Leaving the tab cancels selection, keeping list actions local to the active tab.
+const renderProgramTabsV19Base=renderProgramTabs;
+renderProgramTabs=function(){
+  const old=selectedView;renderProgramTabsV19Base();
+  document.querySelectorAll(".program-tab[data-view]").forEach(btn=>btn.addEventListener("click",()=>{if(multiSelected.size&&btn.dataset.view!==old)clearMultiSelection();},{capture:true}));
+};
+
+render();
+
+
+// ===== ver.20 adjustments =====
+// 2) Long-press + gives a lightweight global creation menu.
+(function(){
+  const fab=$("fabAddBtn"), menu=$("quickAddMenu");
+  let timer=null, longPressed=false, sx=0, sy=0;
+  function closeQuickAdd(){menu.hidden=true;}
+  fab.addEventListener("pointerdown",e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    longPressed=false;sx=e.clientX;sy=e.clientY;clearTimeout(timer);
+    timer=setTimeout(()=>{longPressed=true;menu.hidden=false;document.getSelection?.().removeAllRanges?.();},480);
+  });
+  fab.addEventListener("pointermove",e=>{if(timer&&Math.hypot(e.clientX-sx,e.clientY-sy)>10){clearTimeout(timer);timer=null;}},{passive:true});
+  ["pointerup","pointercancel"].forEach(ev=>fab.addEventListener(ev,()=>{clearTimeout(timer);timer=null;},{passive:true}));
+  const oldFabClick=fab.onclick;
+  fab.onclick=e=>{if(longPressed){longPressed=false;e.preventDefault();return;}closeQuickAdd();oldFabClick?.call(fab,e);};
+  menu.querySelectorAll("[data-quick-add]").forEach(b=>b.onclick=()=>{
+    const kind=b.dataset.quickAdd;closeQuickAdd();
+    if(kind==="memo")openMemoComposer();
+    else if(kind==="draft")openDraftComposer();
+    else openEditor();
+  });
+  document.addEventListener("click",e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==fab)closeQuickAdd();});
+})();
+
+// 6) Move through the currently visible mail list without returning to the list.
+function detailNavigationRows(){
+  if(selectedView==="__memo__"||selectedView==="__draft__")return [];
+  return filtered();
+}
+function updateDetailNavigation(){
+  const x=mails.find(m=>m.id===currentDetailId), prev=$("detailPrevBtn"), next=$("detailNextBtn");
+  if(!x||x.status==="draft"){prev.hidden=true;next.hidden=true;return;}
+  const rows=detailNavigationRows(), i=rows.findIndex(r=>r.id===currentDetailId);
+  prev.hidden=false;next.hidden=false;prev.disabled=i<=0;next.disabled=i<0||i>=rows.length-1;
+}
+const openDetailV20Base=openDetail;
+openDetail=function(id){openDetailV20Base(id);updateDetailNavigation();};
+$("detailPrevBtn").onclick=()=>{const rows=detailNavigationRows(),i=rows.findIndex(r=>r.id===currentDetailId);if(i>0)openDetail(rows[i-1].id);};
+$("detailNextBtn").onclick=()=>{const rows=detailNavigationRows(),i=rows.findIndex(r=>r.id===currentDetailId);if(i>=0&&i<rows.length-1)openDetail(rows[i+1].id);};
+
+// 7) Mail multi-selection can toggle adoption in bulk.
+const updateMultiBarV20Base=updateMultiBar;
+updateMultiBar=function(){
+  updateMultiBarV20Base();
+  const b=$("multiAdoptBtn");if(!b)return;
+  b.hidden=!multiSelected.size||multiSelectKind!=="mail";
+  if(!b.hidden){
+    const allAdopted=[...multiSelected].every(id=>mails.find(x=>x.id===id)?.status==="adopted");
+    b.textContent=allAdopted?"採用解除":"採用";
+  }
+};
+$("multiAdoptBtn").onclick=()=>{
+  if(multiSelectKind!=="mail"||!multiSelected.size)return;
+  const targets=[...multiSelected].map(id=>mails.find(x=>x.id===id)).filter(x=>x&&x.status!=="draft");
+  const allAdopted=targets.length&&targets.every(x=>x.status==="adopted"), now=new Date().toISOString();
+  targets.forEach(x=>{
+    if(allAdopted){x.status="sent";x.adoptedAt="";}
+    else{
+      x.status="adopted";
+      if(!x.sentAt)x.sentAt=now;
+      if(!x.addedAt)x.addedAt=x.sentAt;
+      if(!x.adoptedAt)x.adoptedAt=now;
+    }
+    x.bodyLength=String(x.body||"").length;
+  });
+  localStorage.setItem(KEY,JSON.stringify(mails));
+  clearMultiSelection();render();toast(allAdopted?"採用を解除しました":`${targets.length}件を採用にしました`);
+};
+
+// 8) Analysis-oriented CSV export.
+function csvCell(v){return `"${String(v??"").replace(/"/g,'""')}"`;}
+function analysisPeriodBounds(){
+  const mode=$("analysisPeriod").value,now=new Date();let from=null,to=null;
+  if(mode==="year"){from=new Date(now.getFullYear(),0,1);to=new Date(now.getFullYear()+1,0,1);}
+  else if(mode==="30days"){to=new Date(now);to.setHours(23,59,59,999);from=new Date(now);from.setDate(from.getDate()-29);from.setHours(0,0,0,0);}
+  else if(mode==="custom"){if($("analysisFrom").value)from=new Date($("analysisFrom").value+"T00:00:00");if($("analysisTo").value){to=new Date($("analysisTo").value+"T00:00:00");to.setDate(to.getDate()+1);}}
+  return {from,to};
+}
+function openAnalysisExport(){
+  const programs=[...new Set(mails.filter(x=>x.status!=="draft").map(x=>x.program).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
+  $("analysisProgram").innerHTML='<option value="">すべて</option>'+programs.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join("");
+  $("analysisStatus").value="all";$("analysisPeriod").value="all";$("analysisCustomPeriod").hidden=true;
+  $("analysisExportDialog").showModal();
+}
+$("analysisExportBtn").onclick=()=>{$("moreMenu").hidden=true;openAnalysisExport();};
+$("closeAnalysisExportDialog").onclick=$("cancelAnalysisExportBtn").onclick=()=>$("analysisExportDialog").close();
+$("analysisPeriod").onchange=()=>{$("analysisCustomPeriod").hidden=$("analysisPeriod").value!=="custom";};
+$("runAnalysisExportBtn").onclick=()=>{
+  const status=$("analysisStatus").value,program=$("analysisProgram").value,{from,to}=analysisPeriodBounds();
+  let rows=mails.filter(x=>x.status==="sent"||x.status==="adopted");
+  if(status==="adopted")rows=rows.filter(x=>x.status==="adopted");
+  if(status==="notAdopted")rows=rows.filter(x=>x.status!=="adopted");
+  if(program)rows=rows.filter(x=>x.program===program);
+  rows=rows.filter(x=>{const s=x.sentAt||x.addedAt||x.createdAt||"";if(!s)return !from&&!to;const d=new Date(s);return(!from||d>=from)&&(!to||d<to);});
+  const head=["番組","投稿日時","採用日時","放送回","放送日","ラジオネーム","コーナー","本文","要約","採用状態","文字数"];
+  const lines=[head.map(csvCell).join(",")];
+  rows.forEach(x=>lines.push([x.program,x.sentAt||x.addedAt||"",x.adoptedAt||"",x.episode,x.airDate,x.name,x.corner,x.body,x.summary,x.status==="adopted"?"採用":"未採用",String(x.body||"").length].map(csvCell).join(",")));
+  const csv="\uFEFF"+lines.join("\r\n");
+  downloadBlob("radio-mail-analysis-"+new Date().toISOString().slice(0,10)+".csv",new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  $("analysisExportDialog").close();toast(`${rows.length}件を分析用CSVに書き出しました`);
+};
+
+// 16) Quietly keep analysis-friendly timestamps and body-length metadata from now on.
+mails=mails.map(x=>({...x,bodyLength:String(x.body||"").length,createdAt:x.createdAt||x.addedAt||x.sentAt||""}));
+localStorage.setItem(KEY,JSON.stringify(mails));
+
+const commitDetailFieldV20Base=commitDetailField;
+commitDetailField=function(el){
+  commitDetailFieldV20Base(el);
+  const x=mails.find(m=>m.id===currentDetailId);
+  if(x&&el?.dataset?.key==="body"){x.bodyLength=String(x.body||"").length;localStorage.setItem(KEY,JSON.stringify(mails));}
+};
+
+// Replace adoption toggle so future adoption/undo timestamps are recorded.
+$("adoptHeaderBtn").onclick=()=>{
+  const x=mails.find(m=>m.id===currentDetailId);if(!x||x.status==="draft")return;
+  const wasAdopted=x.status==="adopted",now=new Date().toISOString();
+  x.status=wasAdopted?"sent":"adopted";
+  if(!x.sentAt)x.sentAt=now;
+  if(!x.addedAt)x.addedAt=x.sentAt;
+  x.adoptedAt=wasAdopted?"":now;
+  x.bodyLength=String(x.body||"").length;
+  localStorage.setItem(KEY,JSON.stringify(mails));
+  const disappearing=wasAdopted&&(selectedView==="__adopted__"||!String(selectedView).startsWith("__"));
+  render();
+  if(disappearing){$("detailDialog").close();toast("採用を解除しました");}
+  else{$("detailDialog").close();openDetail(x.id);toast(wasAdopted?"採用を解除しました":"採用にしました");}
+};
+
+// Draft -> sent paths also record the transition time and current length.
+$("sendDraftMenuBtn").onclick=()=>{
+  const d=mails.find(x=>x.id===draftMenuTargetId);$("draftMenu").hidden=true;if(!d)return;
+  const now=new Date().toISOString();d.status="sent";d.sentAt=now;if(!d.addedAt)d.addedAt=now;d.bodyLength=String(d.body||"").length;
+  localStorage.setItem(KEY,JSON.stringify(mails));renderDrafts();toast("送信済みに追加しました");
+};
+
+bindBackdropCloseToAllDialogs();
+render();
+
+// ver.20: detail draft -> sent also records analysis metadata.
+$("markAdoptedBtn").onclick=()=>{
+  const x=mails.find(m=>m.id===currentDetailId);if(!x)return;const now=new Date().toISOString();
+  if(x.status==="draft"){
+    x.status="sent";x.sentAt=now;if(!x.addedAt)x.addedAt=now;x.bodyLength=String(x.body||"").length;
+    localStorage.setItem(KEY,JSON.stringify(mails));$("detailDialog").close();render();toast("送信済みに追加しました");
+  }else{
+    const was=x.status==="adopted";x.status=was?"sent":"adopted";if(!x.sentAt)x.sentAt=now;if(!x.addedAt)x.addedAt=x.sentAt;x.adoptedAt=was?"":now;x.bodyLength=String(x.body||"").length;
+    localStorage.setItem(KEY,JSON.stringify(mails));$("detailDialog").close();render();toast(was?"採用を解除しました":"採用にしました");
+  }
+};
+
+
+// ===== ver.21 adjustments =====
+// Addition button size. ver.20/current size is "small".
+appSettings.fabSize=appSettings.fabSize||"small";
+function applyFabSize(){
+  const size=appSettings.fabSize||"small";
+  $("fabAddBtn").dataset.size=size;
+}
+const applyDisplaySettingsV21Base=applyDisplaySettings;
+applyDisplaySettings=function(){applyDisplaySettingsV21Base();applyFabSize();};
+const loadSettingsFormV21Base=loadSettingsForm;
+loadSettingsForm=function(){loadSettingsFormV21Base();if($("fabSizeSetting"))$("fabSizeSetting").value=appSettings.fabSize||"small";};
+
+const saveSettingsV21Base=$("saveSettingsBtn").onclick;
+$("saveSettingsBtn").onclick=()=>{
+  const fab=$("fabSizeSetting")?.value||"small";
+  // Let the existing v20 handler save all established settings, then add this one.
+  saveSettingsV21Base();
+  appSettings.fabSize=fab;
+  localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));
+  applyFabSize();
+};
+const resetSettingsV21Base=$("resetSettingsBtn").onclick;
+$("resetSettingsBtn").onclick=()=>{
+  resetSettingsV21Base();
+  appSettings.fabSize="small";
+  localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));
+  applyFabSize();
+};
+
+// Larger multi-selection menu, positioned near the most recently selected item.
+let multiLastAnchor=null;
+function positionMultiSelectBar(anchor){
+  const bar=$("multiSelectBar");if(!bar||bar.hidden)return;
+  bar.classList.add("multi-select-floating");
+  const r=anchor?.getBoundingClientRect?.();
+  const w=Math.min(360,window.innerWidth-24);
+  let left=r?Math.max(12,Math.min(r.left,window.innerWidth-w-12)):12;
+  let top=r?(r.bottom+8):Math.round(window.innerHeight*.55);
+  requestAnimationFrame(()=>{
+    const h=bar.offsetHeight||150;
+    if(top+h>window.innerHeight-12)top=r?Math.max(12,r.top-h-8):Math.max(12,window.innerHeight-h-12);
+    bar.style.left=left+"px";bar.style.top=top+"px";
+  });
+}
+const startMultiSelectionV21Base=startMultiSelection;
+startMultiSelection=function(kind,id){
+  startMultiSelectionV21Base(kind,id);
+  multiLastAnchor=selectionElement(id);
+  positionMultiSelectBar(multiLastAnchor);
+};
+const toggleMultiSelectionV21Base=toggleMultiSelection;
+toggleMultiSelection=function(id){
+  toggleMultiSelectionV21Base(id);
+  if(multiSelected.size){
+    multiLastAnchor=selectionElement(id);
+    positionMultiSelectBar(multiLastAnchor);
+  }
+};
+const clearMultiSelectionV21Base=clearMultiSelection;
+clearMultiSelection=function(){
+  clearMultiSelectionV21Base();
+  multiLastAnchor=null;
+  const bar=$("multiSelectBar");bar?.classList.remove("multi-select-floating");if(bar){bar.style.left="";bar.style.top="";}
+};
+window.addEventListener("resize",()=>{if(multiSelected.size)positionMultiSelectBar(multiLastAnchor);});
+
+// Called by the Android back gesture. Selection is consumed before dialogs/app exit.
+window.radioMailHandleBack=function(){
+  if(multiSelected?.size){clearMultiSelection();return true;}
+  const openDialogs=[...document.querySelectorAll("dialog[open]")];
+  if(openDialogs.length){openDialogs[openDialogs.length-1].close();return true;}
+  for(const id of ["quickAddMenu","memoMenu","draftMenu","sortMenu","programMenu","moreMenu"]){
+    const m=document.getElementById(id);if(m&&!m.hidden){m.hidden=true;return true;}
+  }
+  return false;
+};
+
+applyDisplaySettings();
+render();
+
+// ===== ver.22 adjustments =====
+function clampFloatingMenu(menu,left,top){
+  if(!menu)return;
+  menu.style.left=Math.max(8,left)+"px";
+  menu.style.top=Math.max(8,top)+"px";
+  menu.style.right="auto";
+  menu.style.bottom="auto";
+  requestAnimationFrame(()=>{
+    const r=menu.getBoundingClientRect();
+    let x=r.left,y=r.top;
+    if(r.right>window.innerWidth-8)x=Math.max(8,window.innerWidth-r.width-8);
+    if(r.bottom>window.innerHeight-8)y=Math.max(8,window.innerHeight-r.height-8);
+    menu.style.left=x+"px";menu.style.top=y+"px";
+  });
+}
+positionMultiSelectBar=function(anchor){
+  const bar=$("multiSelectBar");if(!bar||bar.hidden)return;
+  bar.classList.add("multi-select-floating");
+  const r=anchor?.getBoundingClientRect?.();
+  requestAnimationFrame(()=>{
+    const w=bar.offsetWidth||300,h=bar.offsetHeight||130;
+    let left=r?(r.left+r.width/2-w/2):(window.innerWidth-w)/2;
+    let top=r?(r.bottom+7):(window.innerHeight-h)/2;
+    if(top+h>window.innerHeight-8)top=r?(r.top-h-7):(window.innerHeight-h)/2;
+    left=Math.max(8,Math.min(left,window.innerWidth-w-8));
+    top=Math.max(8,Math.min(top,window.innerHeight-h-8));
+    bar.style.left=left+"px";bar.style.top=top+"px";
+  });
+};
+
+// Re-clamp program-tab option menu immediately after it opens.
+document.addEventListener("pointerup",()=>{
+  requestAnimationFrame(()=>{
+    const m=$("programMenu");
+    if(m&&!m.hidden){
+      const r=m.getBoundingClientRect();
+      clampFloatingMenu(m,r.left,r.top);
+    }
+  });
+},true);
+
+// Native widget can call this after opening the memo composer.
+window.radioMailOpenMemoAndKeyboard=function(){
+  openMemoComposer();
+  setTimeout(()=>{
+    const d=$("quickComposerDialog");
+    const target=d?.querySelector("textarea,input:not([type=hidden])");
+    if(target){target.focus();target.click();}
+  },120);
+  return true;
+};
+
+
+// ===== ver.23 adjustments =====
+// Drafts now keep a last-updated timestamp. Existing drafts inherit createdAt once.
+mails=mails.map(x=>x.status==="draft"?{...x,updatedAt:x.updatedAt||x.createdAt||new Date().toISOString()}:x);
+localStorage.setItem(KEY,JSON.stringify(mails));
+
+function ver23SearchText(v){return String(v||"").trim().toLowerCase();}
+function renderMemosV23(){
+  const q=ver23SearchText($("memoSearch")?.value);
+  const rows=memoItems.slice().filter(m=>!q||[m.text,m.label].join(" ").toLowerCase().includes(q)).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  $("memoTimeline").innerHTML=rows.map(m=>`<article class="memo-card" data-id="${m.id}"><button class="memo-options-btn" type="button" aria-label="メモのオプション">…</button><div class="memo-text">${esc(m.text)}</div><div class="memo-meta"><span>${formatMemoDate(m.createdAt)}</span><span>${m.text.length}文字${m.favorite?' <span class="list-favorite-star" aria-label="お気に入り">★</span>':''}</span></div></article>`).join("")||(q?'<div class="special-search-empty">該当するメモはありません</div>':'');
+}
+function renderDraftsV23(){
+  const q=ver23SearchText($("draftSearch")?.value);
+  const rows=mails.filter(x=>x.status==="draft"&&(!q||[x.body,x.summary,x.name,x.corner,x.memo].join(" ").toLowerCase().includes(q))).sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0));
+  $("draftTimeline").innerHTML=rows.map(x=>`<article class="draft-card" data-id="${x.id}"><button class="draft-options-btn" type="button" aria-label="下書きのオプション">…</button><div class="draft-body">${esc((x.body||"").replace(/\s+/g," ").trim()||"（本文なし）")}</div><div class="draft-meta"><span class="draft-updated-label">更新 ${x.updatedAt?formatMemoDate(x.updatedAt):(x.createdAt?formatMemoDate(x.createdAt):"日時不明")}</span><span>${(x.body||"").length}文字${x.favorite?' <span class="list-favorite-star" aria-label="お気に入り">★</span>':''}</span></div></article>`).join("")||(q?'<div class="special-search-empty">該当する下書きはありません</div>':'');
+}
+renderMemos=renderMemosV23;
+renderDrafts=renderDraftsV23;
+const openDetailV23Base=openDetail;
+openDetail=function(id){
+  openDetailV23Base(id);
+  const x=mails.find(m=>m.id===id);
+  if(x?.status==="draft"&&$("detailAddedAt")){
+    $("detailAddedAt").hidden=false;
+    $("detailAddedAt").textContent=`更新 ${formatDetailDate(x.updatedAt||x.createdAt||"")}`;
+  }
+};
+$("memoSearch")?.addEventListener("input",renderMemosV23);
+$("draftSearch")?.addEventListener("input",renderDraftsV23);
+
+// Track draft edits from both the quick composer autosave and detail screen.
+const commitDetailFieldV23Base=commitDetailField;
+commitDetailField=function(el){
+  commitDetailFieldV23Base(el);
+  const x=mails.find(m=>m.id===currentDetailId);
+  if(x?.status==="draft"){x.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(mails));renderDraftsV23();}
+};
+const draftUpdatedTouch=debounce(()=>{
+  if(!$("quickComposerDialog")?.open||composerMode!=="draft"||!composerEditId)return;
+  const d=mails.find(x=>x.id===composerEditId);if(!d)return;
+  d.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(mails));
+},350);
+["composerText","draftName","draftCorner"].forEach(id=>$(id)?.addEventListener("input",draftUpdatedTouch));
+$("composerSaveBtn")?.addEventListener("click",()=>{
+  if(composerMode!=="draft")return;
+  const now=new Date().toISOString();
+  if(composerEditId){const d=mails.find(x=>x.id===composerEditId);if(d)d.updatedAt=now;}
+  else {const newest=mails.filter(x=>x.status==="draft").sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0))[0];if(newest&&!newest.updatedAt)newest.updatedAt=newest.createdAt||now;}
+  localStorage.setItem(KEY,JSON.stringify(mails));renderDraftsV23();
+});
+
+
+// Keep updatedAt correct for memo→draft and draft duplication paths.
+const copyMemoToDraftV23Base=copyMemoToDraft;
+copyMemoToDraft=function(id){
+  const before=new Set(mails.map(x=>x.id));
+  copyMemoToDraftV23Base(id);
+  const d=mails.find(x=>x.status==="draft"&&!before.has(x.id));
+  if(d){d.updatedAt=d.createdAt||new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(mails));renderDraftsV23();}
+};
+$("duplicateDraftMenuBtn").onclick=()=>{
+  const d=mails.find(x=>x.id===draftMenuTargetId);$("draftMenu").hidden=true;if(!d)return;
+  const now=new Date().toISOString();mails.push({...d,id:uid(),status:"draft",sentAt:"",createdAt:now,updatedAt:now,addedAt:"",adoptedAt:""});
+  localStorage.setItem(KEY,JSON.stringify(mails));renderDraftsV23();toast("下書きを複製しました");
+};
+
+// Quick corner creation from the mail add/edit screen.
+$("quickAddCornerBtn")?.addEventListener("click",()=>{
+  const program=$("program").value.trim()||((!String(selectedView).startsWith("__"))?selectedView:"");
+  if(!program){toast("先に番組名を入力してください");$("program").focus();return;}
+  const name=prompt("新しいコーナー名");
+  if(!name||!name.trim())return;
+  const corner=name.trim();
+  const current=programSettings[program]||{};
+  const corners=[...new Set([...(Array.isArray(current.corners)?current.corners:[]),corner])];
+  programSettings[program]={...current,corners};
+  localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));
+  fillDatalists();
+  $("corner").value=corner;
+  $("corner").dispatchEvent(new Event("input",{bubbles:true}));
+  toast("コーナーを追加しました");
+});
+
+// Android exports: always use the native create-document flow. Browser keeps normal downloads.
+downloadBlob=async function(name,blob){
+  try{
+    if(window.AndroidBridge&&typeof window.AndroidBridge.saveTextFile==="function"){
+      const text=await blob.text();
+      window.AndroidBridge.saveTextFile(name,blob.type||"text/plain",text);
+      return;
+    }
+  }catch(e){console.error("Android export bridge failed",e);}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+
+// Five-generation automatic backups stored on-device.
+const AUTO_BACKUP_KEY="radioMailManager.autoBackups.v1";
+const AUTO_BACKUP_MAX=5;
+function autoBackupState(){try{const x=JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY)||"[]");return Array.isArray(x)?x:[];}catch{return [];}}
+function buildCompleteBundle(){return {format:"radio-mail-manager-backup",version:APP_VERSION,exportedAt:new Date().toISOString(),data:{mails,memos:memoItems,programSettings,programOrder,sortModes,appSettings,theme:localStorage.getItem(THEME_KEY)||"green",selectedView,autosave:autosaveState(),trash:typeof trashItems!=="undefined"?trashItems:[]}};}
+function saveAutoBackup(reason="auto"){
+  const entry={id:uid(),createdAt:new Date().toISOString(),reason,bundle:buildCompleteBundle()};
+  let list=autoBackupState();list.unshift(entry);list=list.slice(0,AUTO_BACKUP_MAX);
+  try{localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(list));}
+  catch(e){while(list.length>1){list.pop();try{localStorage.setItem(AUTO_BACKUP_KEY,JSON.stringify(list));break;}catch{}}}
+  renderAutoBackupList();return entry;
+}
+function maybeDailyAutoBackup(){
+  const list=autoBackupState();const now=new Date();const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const hasToday=list.some(x=>{const d=new Date(x.createdAt);return !Number.isNaN(d.getTime())&&`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`===today;});
+  if(!hasToday)saveAutoBackup("daily");
+}
+function renderAutoBackupList(){
+  const list=autoBackupState();
+  if($("autoBackupCount"))$("autoBackupCount").textContent=`${list.length} / ${AUTO_BACKUP_MAX}世代`;
+  if(!$("autoBackupList"))return;
+  $("autoBackupList").innerHTML=list.map((x,i)=>`<div class="auto-backup-item" data-backup-id="${esc(x.id)}"><strong>${new Date(x.createdAt).toLocaleString("ja-JP")}</strong><span>${x.reason==="manual"?"手動作成":"自動作成"}・${x.bundle?.data?.mails?.length||0}メール / ${x.bundle?.data?.memos?.length||0}メモ</span><button type="button" class="secondary auto-backup-restore">復元</button></div>`).join("")||'<div class="special-search-empty">まだ自動バックアップはありません</div>';
+}
+function restoreFromBundle(raw){
+  if(!(raw?.format==="radio-mail-manager-backup"&&raw.data))return false;
+  const d=raw.data;
+  mails=Array.isArray(d.mails)?d.mails:[];memoItems=Array.isArray(d.memos)?d.memos:[];programSettings=d.programSettings||{};programOrder=Array.isArray(d.programOrder)?d.programOrder:[];sortModes=d.sortModes||{};
+  appSettings={...appSettings,...(d.appSettings||{})};appSettings.showFields={program:true,episode:true,airDate:true,name:true,corner:true,summary:true,url:true,memo:true,...(appSettings.showFields||{})};selectedView=d.selectedView||"__memo__";
+  if(typeof trashItems!=="undefined")trashItems=Array.isArray(d.trash)?d.trash:[];
+  localStorage.setItem(KEY,JSON.stringify(mails));localStorage.setItem(MEMO_KEY,JSON.stringify(memoItems));localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));localStorage.setItem(SORT_MODES_KEY,JSON.stringify(sortModes));localStorage.setItem(APP_SETTINGS_KEY,JSON.stringify(appSettings));localStorage.setItem("radioMailManager.selectedView",selectedView);
+  if(d.autosave)localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(d.autosave));if(d.theme)applyTheme(d.theme);if(typeof saveTrash==="function")saveTrash();applyDisplaySettings();render();return true;
+}
+$("autoBackupBtn")?.addEventListener("click",()=>{$("moreMenu").hidden=true;renderAutoBackupList();$("autoBackupDialog").showModal();});
+$("closeAutoBackupDialog")?.addEventListener("click",()=>$("autoBackupDialog").close());
+$("createAutoBackupBtn")?.addEventListener("click",()=>{saveAutoBackup("manual");toast("自動バックアップを1世代作成しました");});
+$("autoBackupList")?.addEventListener("click",e=>{
+  const item=e.target.closest(".auto-backup-item");if(!item||!e.target.closest(".auto-backup-restore"))return;
+  const entry=autoBackupState().find(x=>x.id===item.dataset.backupId);if(!entry)return;
+  if(!confirm("この世代の内容に復元しますか？現在の状態は復元前に1世代保存します。"))return;
+  saveAutoBackup("manual");
+  if(restoreFromBundle(entry.bundle)){$("autoBackupDialog").close();toast("自動バックアップから復元しました");}
+});
+
+// Create at most one automatic generation per calendar day when the app starts.
+setTimeout(maybeDailyAutoBackup,500);
+bindBackdropCloseToAllDialogs();
+render();
