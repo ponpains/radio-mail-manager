@@ -1336,3 +1336,23 @@ body.multi-select-mode .memo-card,body.multi-select-mode .draft-card,body.multi-
 .multi-select-bar.multi-select-sheet #multiSelectCount{grid-column:1/-1;font-size:13px;font-weight:700;margin:0 2px 2px}
 .multi-select-bar.multi-select-sheet button{min-width:0!important;min-height:40px!important;padding:7px 5px!important;font-size:12px!important;white-space:normal!important;line-height:1.2}
 @media(max-width:430px){.program-add-row{grid-template-columns:1fr}.program-add-row button{width:100%}.multi-select-bar.multi-select-sheet{grid-template-columns:repeat(3,minmax(0,1fr))!important}.multi-select-bar.multi-select-sheet #multiSelectCount{grid-column:1/-1}}
+
+
+/* ===== ver.26 ===== */
+/* Search dialog sits higher and gives the query field more room. */
+.search-dialog{margin:6vh auto auto!important;width:min(96vw,680px)!important;max-height:88vh!important;}
+.global-search-body{padding-top:12px!important;}
+.global-search-row{grid-template-columns:minmax(96px,0.30fr) minmax(0,1fr)!important;gap:10px!important;}
+.global-search-row select,.global-search-row input{min-height:48px!important;border:1px solid #cfcfcf!important;border-radius:11px!important;padding:10px 12px!important;font-size:16px!important;background:#fff!important;}
+.global-search-row input{font-size:17px!important;}
+.global-search-results{max-height:66vh!important;}
+@media(max-width:420px){.search-dialog{margin-top:4vh!important}.global-search-row{grid-template-columns:104px minmax(0,1fr)!important}.global-search-row select,.global-search-row input{min-height:50px!important;padding:10px!important;}}
+/* Empty summaries remain editable instead of disappearing from the detail view. */
+.detail-summary-edit:empty::before{content:attr(data-placeholder);color:#aaa;pointer-events:none;}
+/* Program creation is a small action next to the heading, not a prominent form row. */
+.program-settings-head h2{display:flex;align-items:center;gap:7px;}
+.program-add-icon{width:28px;height:28px;border:1px solid #d8d8d8;border-radius:50%;background:#fff;color:var(--accent);font-size:20px;line-height:24px;padding:0;font-weight:700;}
+.program-add-icon:active{background:var(--accent-soft);}
+.add-program-dialog{width:min(92vw,420px)!important;}
+.add-program-body{padding:14px!important;}
+.add-program-body input{width:100%;box-sizing:border-box;margin-top:5px;padding:10px;border:1px solid #ccc;border-radius:9px;font:inherit;}

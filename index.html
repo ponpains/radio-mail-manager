@@ -10,12 +10,12 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css?v=ver25">
+  <link rel="stylesheet" href="styles.css?v=ver26">
   <title>ラジオメールマネージャー</title>
 </head>
 <body>
 <header class="topbar">
-  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.25</span></h1></div>
+  <div><div class="eyebrow">RADIO MAIL MANAGER</div><h1>メールマネージャー <span class="version-label">ver.26</span></h1></div>
   <div class="top-actions">
     <button id="installBtn" class="icon-btn" hidden aria-label="ホーム画面に追加">＋</button>
     <button id="globalSearchBtn" class="icon-btn" aria-label="検索">⌕</button>
@@ -162,15 +162,11 @@
 
 
 <dialog id="programSettingsDialog" class="compact-dialog">
-  <div class="dialog-head">
-    <h2>番組設定</h2>
+  <div class="dialog-head program-settings-head">
+    <h2>番組設定 <button type="button" id="openAddProgramDialog" class="program-add-icon" aria-label="番組を追加" title="番組を追加">＋</button></h2>
     <button type="button" id="closeProgramSettingsDialog" class="close">×</button>
   </div>
   <div class="program-settings-body">
-    <div class="program-add-row">
-      <input id="newProgramTabName" type="text" placeholder="新しい番組名">
-      <button type="button" id="addProgramTabBtn" class="secondary">専用タブを追加</button>
-    </div>
     <label>番組<select id="programSettingsSelect"></select></label>
     <label>投稿フォームURL<input id="programFormUrl" type="url" placeholder="https://..."></label>
     <label>メールアドレス<input id="programEmail" type="email" placeholder="example@example.com"></label>
@@ -181,6 +177,20 @@
     <div class="program-settings-actions">
       <button type="button" id="openProgramPostBtn" class="secondary">投稿先を開く</button>
       <button type="button" id="saveProgramSettingsBtn" class="primary">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="addProgramDialog" class="compact-dialog add-program-dialog">
+  <div class="dialog-head">
+    <h2>番組を追加</h2>
+    <button type="button" id="closeAddProgramDialog" class="close">×</button>
+  </div>
+  <div class="add-program-body">
+    <label>番組名<input id="newProgramTabName" type="text" placeholder="番組名を入力"></label>
+    <div class="program-settings-actions">
+      <button type="button" id="cancelAddProgramBtn" class="secondary">キャンセル</button>
+      <button type="button" id="addProgramTabBtn" class="primary">追加</button>
     </div>
   </div>
 </dialog>
@@ -259,10 +269,10 @@
   <div class="global-search-body">
     <div class="global-search-row">
       <select id="globalSearchScope" aria-label="検索対象">
-        <option value="memo">メモ</option>
+        <option value="memo" selected>メモ</option>
         <option value="draft">下書き</option>
         <option value="mail">メール</option>
-        <option value="all" selected>横断</option>
+        <option value="all">横断</option>
       </select>
       <input id="globalSearchInput" type="search" placeholder="キーワードを入力">
     </div>
@@ -398,6 +408,6 @@
   <button type="button" id="multiCancelBtn" class="secondary">解除</button>
 </div>
 <div id="toast" class="toast"></div>
-<script src="app.js?v=ver25"></script>
+<script src="app.js?v=ver26"></script>
 </body>
 </html>

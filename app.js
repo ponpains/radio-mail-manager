@@ -1,5 +1,5 @@
 // standalone-ready: UI/state are kept local and modular for later Android packaging.
-const APP_VERSION="ver.25";
+const APP_VERSION="ver.26";
 const KEY="radioMailManager.v3";
 const MEMO_KEY="radioMailManager.memos.v1";
 const THEME_KEY="radioMailManager.theme";
@@ -421,7 +421,7 @@ function openDetail(id){
         <div class="k">状態</div><div class="status-cell">${x.status==="adopted"?"採用":"送信済み"}${x.sentAt?`<span class="sent-at">送信 ${new Date(x.sentAt).toLocaleString("ja-JP")}</span>`:""}</div>
       </div>
       <div class="detail-body mail-body-section"><strong>本文</strong><br><div class="detail-gray editable-block-v1 mail-body-main" data-key="body" contenteditable="true">${esc(x.body||"本文未登録")}</div></div>
-      ${x.summary?`<div class="detail-body"><strong>要約</strong><br><div class="detail-gray editable-block-v1" data-key="summary" contenteditable="true">${esc(x.summary)}</div></div>`:""}
+      <div class="detail-body"><strong>要約</strong><br><div class="detail-gray editable-block-v1 detail-summary-edit" data-key="summary" contenteditable="true" data-placeholder="要約を入力">${esc(x.summary||"")}</div></div>
       <div class="detail-body"><strong>Podcast URL</strong><br><div id="podcastBlock"></div></div>
       ${x.memo?`<div class="detail-body"><strong>メモ</strong><br><div class="detail-gray editable-block-v1" data-key="memo" contenteditable="true">${esc(x.memo)}</div></div>`:""}`;
     bindDetailEditors();
@@ -1933,7 +1933,7 @@ renderGlobalSearch=function(){
 };
 $("globalSearchScope")?.addEventListener("change",renderGlobalSearch);
 const globalSearchBtnV25=$("globalSearchBtn");
-if(globalSearchBtnV25)globalSearchBtnV25.onclick=()=>{$("globalSearchInput").value="";$("globalSearchScope").value="all";renderGlobalSearch();$("globalSearchDialog").showModal();setTimeout(()=>$("globalSearchInput").focus(),50);};
+if(globalSearchBtnV25)globalSearchBtnV25.onclick=()=>{$("globalSearchInput").value="";$("globalSearchScope").value="memo";renderGlobalSearch();$("globalSearchDialog").showModal();setTimeout(()=>$("globalSearchInput").focus(),50);};
 
 // Backup/export actions live in a second-level menu to keep the main options short.
 $("backupFolderBtn")?.addEventListener("click",e=>{
@@ -1949,6 +1949,16 @@ for(const id of ["backupBtn","backupCopyBtn","autoBackupBtn","restoreBtn","csvBt
 document.addEventListener("click",e=>{if(!e.target.closest("#backupMenu")&&!e.target.closest("#backupFolderBtn"))$("backupMenu").hidden=true;});
 
 // Program settings can create a visible dedicated tab even before an adoption exists.
+function openAddProgramDialog(){
+  $("newProgramTabName").value="";
+  $("addProgramDialog").showModal();
+  setTimeout(()=>$("newProgramTabName")?.focus(),60);
+}
+function closeAddProgramDialog(){$("addProgramDialog")?.close();}
+$("openAddProgramDialog")?.addEventListener("click",openAddProgramDialog);
+$("closeAddProgramDialog")?.addEventListener("click",closeAddProgramDialog);
+$("cancelAddProgramBtn")?.addEventListener("click",closeAddProgramDialog);
+$("newProgramTabName")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("addProgramTabBtn")?.click();}});
 $("addProgramTabBtn")?.addEventListener("click",()=>{
   const name=String($("newProgramTabName")?.value||"").trim();
   if(!name)return toast("番組名を入力してください");
@@ -1959,9 +1969,9 @@ $("addProgramTabBtn")?.addEventListener("click",()=>{
   localStorage.setItem(MANUAL_PROGRAM_TABS_KEY,JSON.stringify(manualProgramTabs));
   localStorage.setItem(PROGRAM_ORDER_KEY,JSON.stringify(programOrder));
   localStorage.setItem(PROGRAM_SETTINGS_KEY,JSON.stringify(programSettings));
-  $("newProgramTabName").value="";
   refreshProgramSettingsSelect();
   $("programSettingsSelect").value=name;loadProgramSettingsForm();renderProgramTabs();
+  closeAddProgramDialog();
   toast(`「${name}」タブを追加しました`);
 });
 
@@ -2025,5 +2035,30 @@ clearMultiSelection=function(){clearMultiSelectionV25Base();const bar=$("multiSe
 const radioMailHandleBackV25Base=window.radioMailHandleBack;
 window.radioMailHandleBack=function(){if($("backupMenu")&&!$("backupMenu").hidden){$("backupMenu").hidden=true;return true;}return radioMailHandleBackV25Base?.()||false;};
 new MutationObserver(()=>{const m=$("backupMenu");if(m&&!m.hidden)requestAnimationFrame(()=>{const v=visualBounds();fitFloatingToVisualViewport(m,v.right-(m.offsetWidth||220)-8,v.top+56);});}).observe($("backupMenu"),{attributes:true,attributeFilter:["hidden"]});
+
+render();
+
+
+// ===== ver.26 adjustments =====
+// Search opens higher, with memo as the default scope.
+if($("globalSearchBtn"))$("globalSearchBtn").onclick=()=>{
+  $("globalSearchInput").value="";
+  $("globalSearchScope").value="memo";
+  renderGlobalSearch();
+  $("globalSearchDialog").showModal();
+  setTimeout(()=>$("globalSearchInput").focus(),60);
+};
+
+// Android back/escape always consumes the topmost transient UI before app navigation.
+function closeTopTransientUI(){
+  if(multiSelected?.size){clearMultiSelection();return true;}
+  const dialogs=[...document.querySelectorAll("dialog[open]")];
+  if(dialogs.length){dialogs[dialogs.length-1].close();return true;}
+  const transient=[...document.querySelectorAll(".context-menu:not([hidden]),.more-menu:not([hidden]),.multi-select-bar:not([hidden])")];
+  if(transient.length){const el=transient[transient.length-1];if(el.id==="multiSelectBar")clearMultiSelection();else el.hidden=true;return true;}
+  return false;
+}
+window.radioMailHandleBack=closeTopTransientUI;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&closeTopTransientUI()){e.preventDefault();e.stopPropagation();}},true);
 
 render();
